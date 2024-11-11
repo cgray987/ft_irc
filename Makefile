@@ -6,7 +6,7 @@
 #    By: cgray <cgray@student.42.fr>                +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/10 14:55:00 by cgray             #+#    #+#              #
-#    Updated: 2024/11/05 15:59:01 by cgray            ###   ########.fr        #
+#    Updated: 2024/11/11 14:50:07 by cgray            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,7 +15,7 @@ NAME = ft_irc
 CC = c++
 CFLAGS = -g #-Wall -Werror -Wextra -g -std=c++98
 
-SRC = main.cpp Server.cpp User.cpp
+SRC = main.cpp Server.cpp User.cpp ServerCommands.cpp
 OBJ = ${SRC:.cpp = .o}
 
 #Colors:

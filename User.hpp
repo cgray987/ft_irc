@@ -6,7 +6,7 @@
 /*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/04 16:02:28 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/04 16:14:54 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/11 16:50:50 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,9 @@ class User
 		std::string	_user;
 		std::string	_host;
 		int			_fd;
+		bool		_auth;
+		bool		_op;
+		std::string	_read_buf;
 
 		User();
 	public:
@@ -31,6 +34,23 @@ class User
 		User &operator = (const User &src);
 		~User();
 
-		int		get_fd();
+		//getters
+		int			get_fd();
+		std::string	get_nick();
+		std::string	get_user();
+		std::string	get_host();
+		std::string	get_prefix();
+
+		bool		get_auth();
+		bool		get_op();
+
+
+		//setters
 		void	set_fd(int fd);
+		void	set_nick(std::string nick);
+		void	set_user(std::string user);
+		void	set_host(std::string host);
+		void	set_auth(bool auth);
+		void	set_op(bool op_status);
+		void	set_send_buf(std::string buf);
 };

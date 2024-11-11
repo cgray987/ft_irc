@@ -1,0 +1,18 @@
+#TODO
+
+
+* Auth user, set nick, user
+* join channel
+* send/recv private messages
+
+*add channel/server operators
+	*operator specific commands
+	*kick
+	*invite
+	*topic
+	*mode
+		*-invite
+		*-topic
+		*-kick
+		*-o (give/take privilege)
+		*-l (set/rm user limit to channel)
