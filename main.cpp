@@ -6,7 +6,7 @@
 /*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/01 13:03:06 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/11 16:05:46 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/12 16:00:59 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,7 @@ int	main(int ac, char **av)
 		{
 			int	nfds = epoll_wait(server.get_epoll_socket(), events, 10, -1);
 			if (nfds == -1)
-				throw std::runtime_error("epoll_wait error!");
+				throw std::runtime_error("epoll_wait error!"); //TODO sometimes this is called when sending SIGINT
 
 			for (int i = 0; i < nfds; ++i)
 			{

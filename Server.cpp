@@ -6,7 +6,7 @@
 /*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/01 13:03:09 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/11 17:08:30 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/12 17:10:13 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ Server::Server(int port, std::string password) : _port(port), _password(password
 	std::string str(buf);
 	_start_time = str;
 
-	
+
 	//getaddrinfo?
 	//create server listening socket socket(domain, type, protocol)
 		//--unsure if we can hardcode these with AF_INET, SOCK_STREAM, 0, or need getaddrinfo
@@ -105,6 +105,8 @@ int	Server::new_connection()
 	User *new_user = new User("",  "", host);
 	_users.push_back(new_user);
 	new_user->set_fd(connection_socket);
+
+	Server::register_client(new_user);
 
 	struct epoll_event	ev;
 	ev.events = EPOLLIN | EPOLLET;
@@ -233,6 +235,18 @@ void	Server::register_client(User *user)
 	user->set_send_buf(RPL_CREATED(user->get_nick(), this->get_start_time()));
 	user->set_send_buf(RPL_MYINFO(user->get_nick(), "localhost", "0.01", "io", "kost", "k"));
 	user->set_send_buf(RPL_ISUPPORT(user->get_nick(), "CHANNELLEN=32 NICKLEN=9 TOPICLEN=307"));
+	Server::send_server_response(user, user->get_read_buf());
+}
+
+void	Server::send_server_response(User *user, std::string send_buf)
+{
+	std::istringstream	buf(send_buf);
+	std::string			reply;
+
+	send(user->get_fd(), send_buf.c_str(), send_buf.size(), 0);
+	while (getline(buf, reply))
+		std::cout << "Server Message to client [" << user->get_fd() << "]: " << BLU << reply << "\n" << RST;
+
 }
 
 std::string	Server::get_password(){return (_password);}

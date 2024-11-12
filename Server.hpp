@@ -6,7 +6,7 @@
 /*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/01 13:03:20 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/11 17:07:04 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/12 16:42:57 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,15 +75,16 @@ class Server
 		std::string	get_start_time();
 
 		//server functions
-		int	client_message(User *user);
-		int	new_connection();
-		int	auth_user(User *user);
-		int	get_command(User *user, std::string msg);
+		int		client_message(User *user);
+		int		new_connection();
+		int		auth_user(User *user);
+		int		get_command(User *user, std::string msg);
 		void	reply(User *user, std::string prefix, std::string command,
 						std::string target, std::string message);
 		void	add_user(User *user);
 		void	remove_user(User *user);
 		void	register_client(User *user);
+		void	send_server_response(User *user, std::string send_buf);
 
 		//server commands
 		// Command function implementations

@@ -6,15 +6,35 @@
 /*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/07 15:14:51 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/11 14:03:49 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/12 17:18:43 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 
+#define VALID_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789[]{}\\|^`–-_"
+
 int Server::NICK(User *user, std::stringstream &command)
 {
-	
+	std::string	nick;
+	bool		valid = true;
+
+	command >> nick;
+	if (nick.empty())
+	{
+		Server::reply(user, "", "431", "", ":No nickname given"); //ERR_NONICKNAMEGIVEN
+		valid = false;
+	}
+	else if (nick.length() > 30)
+		nick = nick.substr(0, 30);
+	else if (nick.find_first_not_of(VALID_CHARS) != nick.npos
+		|| isdigit(nick[0]))
+	{
+		Server::reply(user, "", "432", "", ":Erroneus nickname"); //ERR_ERRONEUSNICKNAME
+		valid = false;
+	}
+	//ERR_NICKNAMEINUSE
+	//set nickname
 }
 int Server::USER(User *user, std::stringstream &command){}
 int Server::PASS(User *user, std::stringstream &command)

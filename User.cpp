@@ -6,7 +6,7 @@
 /*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/04 16:02:25 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/11 17:06:16 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/12 15:53:37 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@ User::~User()
 int	User::get_fd() {return _fd;}
 std::string	User::get_nick(){return _nick;}
 std::string	User::get_user(){return _user;}
+std::string	User::get_read_buf(){return _read_buf;}
 bool	User::get_auth(){return _auth;}
 bool	User::get_op(){return _op;}
 

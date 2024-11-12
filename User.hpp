@@ -6,7 +6,7 @@
 /*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/04 16:02:28 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/11 16:50:50 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/12 15:53:41 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,7 @@ class User
 		std::string	get_user();
 		std::string	get_host();
 		std::string	get_prefix();
+		std::string	get_read_buf();
 
 		bool		get_auth();
 		bool		get_op();
