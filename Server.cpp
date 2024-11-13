@@ -6,7 +6,7 @@
 /*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/01 13:03:09 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/13 16:39:40 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/13 16:41:05 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@ Server	&Server::operator = (const Server &src){return (*this);}
 Server::Server(int port, std::string password) : _port(port), _password(password)
 {
 	time_t rawtime;
-	timeinfo = localtime(&rawtime);
+	struct tm *timeinfo = localtime(&rawtime);
 	char	buf[80];
 	strftime(buf, sizeof(buf), "%d-%m-%Y %H:%M:%S", timeinfo);
 	std::string str(buf);
