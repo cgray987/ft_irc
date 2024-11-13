@@ -6,14 +6,14 @@
 /*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/01 13:03:06 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/12 16:00:59 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/13 15:25:50 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 #include "signal.h"
 
-bool	server_on = false; //unsure if this is legal
+bool	server_on = false;
 
 void	signal_handler(int signal)
 {
@@ -21,22 +21,34 @@ void	signal_handler(int signal)
 		server_on = false;
 }
 
-int	main(int ac, char **av)
+int	arguments(int ac, char **av)
 {
 	if (ac != 3)
 		return (std::cerr << RED << "Error: bad arguments\n" << RST
 					<< "usage: ./ircserv <port> <password>\n", 1);
-	int	port = atoi(av[1]);
+
+	int			port = atoi(av[1]);
 	std::string	password = av[2];
 
 	if (port < 1024 || port > 65535 || password.empty() || password.length() > 30)
 		return (std::cerr << RED << "Error: arguments out of range\n" << RST
 					<< "\t1024 < port < 65535\n\t1 < password_len < 30\n", 1);
+	return (0);
+}
 
-	struct sigaction	act;
-	act.sa_handler = signal_handler;
-	act.sa_flags = 0;
-	sigaction(SIGINT, &act, 0);
+int	main(int ac, char **av)
+{
+	if (arguments(ac, av))
+		return (1);
+
+	int			port = atoi(av[1]);
+	std::string	password = av[2];
+
+	struct sigaction	action;
+	action.sa_handler = signal_handler;
+	action.sa_flags = 0;
+	sigemptyset(&action.sa_mask); //not 100% sure this is legal -- not in allowed functions but idk why it would be disallowed
+	sigaction(SIGINT, &action, 0);
 
 	try
 	{
@@ -48,8 +60,8 @@ int	main(int ac, char **av)
 		while (server_on == true)
 		{
 			int	nfds = epoll_wait(server.get_epoll_socket(), events, 10, -1);
-			if (nfds == -1)
-				throw std::runtime_error("epoll_wait error!"); //TODO sometimes this is called when sending SIGINT
+			if (nfds == -1 && errno != EINTR)
+				throw std::runtime_error("epoll_wait error!");
 
 			for (int i = 0; i < nfds; ++i)
 			{

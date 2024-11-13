@@ -6,14 +6,14 @@
 #    By: cgray <cgray@student.42.fr>                +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/10 14:55:00 by cgray             #+#    #+#              #
-#    Updated: 2024/11/11 14:50:07 by cgray            ###   ########.fr        #
+#    Updated: 2024/11/13 16:36:35 by cgray            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = ft_irc
 
 CC = c++
-CFLAGS = -g #-Wall -Werror -Wextra -g -std=c++98
+CFLAGS = -Wall -Werror -Wextra -g -std=c++98
 
 SRC = main.cpp Server.cpp User.cpp ServerCommands.cpp
 OBJ = ${SRC:.cpp = .o}

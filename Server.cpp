@@ -6,7 +6,7 @@
 /*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/01 13:03:09 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/12 17:10:13 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/13 14:35:41 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,14 +17,13 @@ Server::Server(const Server &src){*this = src;}
 Server	&Server::operator = (const Server &src){return (*this);}
 Server::Server(int port, std::string password) : _port(port), _password(password)
 {
-	struct tm *timeinfo;
 	time_t rawtime;
-	timeinfo = localtime(&rawtime);
+	time(&rawtime);
+	struct tm *timeinfo = localtime(&rawtime);
 	char	buf[80];
 	strftime(buf, sizeof(buf), "%d-%m-%Y %H:%M:%S", timeinfo);
 	std::string str(buf);
 	_start_time = str;
-
 
 	//getaddrinfo?
 	//create server listening socket socket(domain, type, protocol)
@@ -102,7 +101,7 @@ int	Server::new_connection()
 			<< " on FD: " << connection_socket << "\n";
 
 	//need to store this
-	User *new_user = new User("",  "", host);
+	User *new_user = new User("", "", host);
 	_users.push_back(new_user);
 	new_user->set_fd(connection_socket);
 
@@ -150,7 +149,6 @@ int	Server::client_message(User *user)
 
 	int ret = Server::get_command(user, _msg);
 
-
 	return (ret);
 }
 
@@ -178,14 +176,25 @@ int Server::get_command(User *user, std::string msg)
 	command_map["USER"] = &Server::USER;
 	command_map["OPER"] = &Server::OPER;
 
-	//read each word in _msg, if word is a command, call corresponding command function
+	// read each word in _msg, if word is a command, call corresponding command function
+
 	while (ss >> word)
 	{
+		std::cout << "Processing command: " << word << std::endl;
 		std::map<std::string, CommandFunc>::iterator it = command_map.find(word);
 		if (it != command_map.end())
-			ret = (this->*(it->second))(user, ss);
+		{
+			std::stringstream params;
+			params << ss.rdbuf(); // Get the remaining parameters
+			std::cout << "Calling command function for: " << word << std::endl;
+			ret = (this->*(it->second))(user, params);
+		}
+		else
+		{
+			std::cout << "Command not found: " << word << std::endl;
+		}
 	}
-	return (ret);
+	return ret;
 }
 
 void	Server::reply(User *user, std::string prefix, std::string command,
