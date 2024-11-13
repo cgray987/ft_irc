@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   User.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fvonsovs <fvonsovs@student.42prague.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/04 16:02:25 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/12 15:53:37 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/13 15:56:34 by fvonsovs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,3 +37,19 @@ void	User::set_fd(int fd) {_fd = fd;}
 void	User::set_auth(bool auth){_auth = auth;}
 void	User::set_op(bool op_status){_op = op_status;}
 void	User::set_send_buf(std::string buf){_read_buf += buf;}
+
+// channels
+void User::join_channel(Channel* channel)
+{
+    _channels.insert(channel);
+}
+
+void User::leave_channel(Channel* channel)
+{
+    _channels.erase(channel);
+}
+
+const std::set<Channel*>& User::get_channels() const
+{
+    return _channels;
+}
