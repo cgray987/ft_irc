@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   User.hpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fvonsovs <fvonsovs@student.42prague.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/04 16:02:28 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/12 15:53:41 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/13 15:46:58 by fvonsovs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,9 @@
 #include <iostream>
 #include <vector>
 #include <unistd.h>
+#include <set>
+
+class Channel;
 
 class User
 {
@@ -26,6 +29,8 @@ class User
 		bool		_auth;
 		bool		_op;
 		std::string	_read_buf;
+
+		std::set<Channel *> _channels;
 
 		User();
 	public:
@@ -54,4 +59,9 @@ class User
 		void	set_auth(bool auth);
 		void	set_op(bool op_status);
 		void	set_send_buf(std::string buf);
+
+		// channels
+		void join_channel(Channel *channel);
+		void leave_channel(Channel *channel);
+		const std::set<Channel *> &get_channels() const;
 };

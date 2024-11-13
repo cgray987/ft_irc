@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fvonsovs <fvonsovs@student.42prague.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/01 13:03:09 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/12 17:10:13 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/13 15:26:39 by fvonsovs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,9 @@ Server::Server(int port, std::string password) : _port(port), _password(password
 {
 	struct tm *timeinfo;
 	time_t rawtime;
+	time(&rawtime);
 	timeinfo = localtime(&rawtime);
+	
 	char	buf[80];
 	strftime(buf, sizeof(buf), "%d-%m-%Y %H:%M:%S", timeinfo);
 	std::string str(buf);
@@ -129,7 +131,8 @@ int	Server::client_message(User *user)
 	if (bytes == -1)
 	{
 		std::cout << RED << "~Server~ recv() failure [456]\n" << RST;
-		perror("recv");
+		// perror("recv");
+		throw std::runtime_error("Error in recv()");
 		return (1);
 	}
 		// throw std::runtime_error("Error in recv()");

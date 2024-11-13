@@ -16,3 +16,6 @@
 		*-kick
 		*-o (give/take privilege)
 		*-l (set/rm user limit to channel)
+
+- server class channel creation and deletion
+- join command

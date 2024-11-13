@@ -3,19 +3,19 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: cgray <cgray@student.42.fr>                +#+  +:+       +#+         #
+#    By: fvonsovs <fvonsovs@student.42prague.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/10 14:55:00 by cgray             #+#    #+#              #
-#    Updated: 2024/11/11 14:50:07 by cgray            ###   ########.fr        #
+#    Updated: 2024/11/13 15:47:42 by fvonsovs         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-NAME = ft_irc
+NAME = ircserv
 
 CC = c++
-CFLAGS = -g #-Wall -Werror -Wextra -g -std=c++98
+CFLAGS = -g -std=c++98 #-Wall -Werror -Wextra -fsanitize=address -g 
 
-SRC = main.cpp Server.cpp User.cpp ServerCommands.cpp
+SRC = main.cpp Server.cpp User.cpp ServerCommands.cpp Channel.cpp
 OBJ = ${SRC:.cpp = .o}
 
 #Colors:
