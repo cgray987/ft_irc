@@ -6,16 +6,16 @@
 #    By: cgray <cgray@student.42.fr>                +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/10 14:55:00 by cgray             #+#    #+#              #
-#    Updated: 2024/11/13 16:36:35 by cgray            ###   ########.fr        #
+#    Updated: 2024/11/13 16:39:17 by cgray            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-NAME = ft_irc
+NAME = ircserv
 
 CC = c++
-CFLAGS = -Wall -Werror -Wextra -g -std=c++98
+CFLAGS = -g #-Wall -Werror -Wextra -g -std=c++98
 
-SRC = main.cpp Server.cpp User.cpp ServerCommands.cpp
+SRC = main.cpp Server.cpp User.cpp ServerCommands.cpp Channel.cpp
 OBJ = ${SRC:.cpp = .o}
 
 #Colors:
