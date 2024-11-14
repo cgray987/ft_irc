@@ -6,7 +6,7 @@
 /*   By: fvonsovs <fvonsovs@student.42prague.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/13 15:28:40 by fvonsovs          #+#    #+#             */
-/*   Updated: 2024/11/13 15:53:26 by fvonsovs         ###   ########.fr       */
+/*   Updated: 2024/11/14 15:47:27 by fvonsovs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@ class Channel
 		void add_member(User* user);
 		void remove_member(User* user);
 		bool is_member(User* user) const;
-		void set_topic(const std::string& topic);
+		void set_topic(const std::string &topic);
 
 		// ops
 		void add_operator(User* user);
