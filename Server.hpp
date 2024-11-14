@@ -3,14 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fvonsovs <fvonsovs@student.42prague.com    +#+  +:+       +#+        */
+/*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/01 13:03:20 by cgray             #+#    #+#             */
-<<<<<<< HEAD
-/*   Updated: 2024/11/14 16:38:12 by cgray            ###   ########.fr       */
-=======
-/*   Updated: 2024/11/14 15:52:27 by fvonsovs         ###   ########.fr       */
->>>>>>> 6867c722a775bf43b20fdd124082098f54cc1b49
+/*   Updated: 2024/11/14 17:09:09 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,13 +48,12 @@ class Server
 		std::string		_password;
 
 		std::vector<User *>	_users;
-		std::vector<Channel *>	_channels;
 		User				*_server_user;
 		std::string			_msg;
 		std::string			_start_time;
 
 		std::map<std::string, Channel *> _channels;
-		
+
 		//default constructor
 		Server();
 
