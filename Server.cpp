@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fvonsovs <fvonsovs@student.42prague.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/01 13:03:09 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/13 16:41:05 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/14 15:52:22 by fvonsovs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -262,3 +262,31 @@ std::string	Server::get_password(){return (_password);}
 std::string	Server::get_start_time(){return (_start_time);}
 int	Server::get_epoll_socket(){return (_epoll_socket);}
 int	Server::get_server_socket(){return (_server_socket);}
+
+// channels
+
+Channel *Server::get_channel(const std::string &name)
+{
+	std::map<std::string, Channel *>::iterator it = _channels.find(name);
+	if (it != _channels.end())
+		return it->second;
+	return NULL;
+}
+
+Channel *Server::create_channel(const std::string &name)
+{
+	Channel *channel = new Channel(name);
+	_channels[name] = channel;
+	return channel;
+}
+
+void Server::remove_channel(const std::string &name)
+{
+	std::map<std::string, Channel *>::iterator it = _channels.find(name);
+
+	if (it != _channels.end())
+	{
+		delete it->second;
+		_channels.erase(it);
+	}
+}
