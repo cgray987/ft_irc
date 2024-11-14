@@ -6,13 +6,22 @@
 /*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/07 15:14:51 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/13 16:37:39 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/14 16:53:02 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 
 #define VALID_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789[]{}\\|^`–-_"
+
+/* CAP LS --supposed to send server's capabilities to client
+	--unsure if we can just ignore */
+int Server::CAP(User *user, std::stringstream &command)
+{
+	std::string buf;
+	command >> buf;
+	return (0);
+}
 
 int Server::NICK(User *user, std::stringstream &command)
 {
@@ -35,9 +44,27 @@ int Server::NICK(User *user, std::stringstream &command)
 	}
 	//ERR_NICKNAMEINUSE
 	//set nickname
+	if (valid == true)
+	{
+		//need to add to channels?
+		reply(user, user->get_prefix(), "NICK", ":" + nick, "");
+		user->set_nick(nick);
+	}
 	return (0);
 }
-int Server::USER(User *user, std::stringstream &command){return (0);}
+
+int Server::USER(User *user, std::stringstream &command)
+{
+	if (user->get_auth() == false)
+	{
+		std::cout << RED << "Disconnected " << user->get_nick() << "due to auth failure\n" << RST;
+	}
+	std::string	username;
+	command >> username;
+	user->set_user(username);
+	return (0);
+}
+
 int Server::PASS(User *user, std::stringstream &command)
 {
 	std::string	password;
@@ -75,7 +102,11 @@ int Server::KILL(User *user, std::stringstream &command)
 }
 int Server::OPER(User *user, std::stringstream &command){return (0);}
 int Server::KICK(User *user, std::stringstream &command){return (0);}
-int Server::PING(User *user, std::stringstream &command){return (0);}
+int Server::PING(User *user, std::stringstream &command)
+{
+	reply(user, "", "PONG", "", "ft_irc");
+	return (0);
+}
 int Server::INVITE(User *user, std::stringstream &command){return (0);}
 int Server::TOPIC(User *user, std::stringstream &command){return (0);}
 int Server::MODE(User *user, std::stringstream &command){return (0);}

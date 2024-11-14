@@ -6,12 +6,13 @@
 /*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/01 13:03:06 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/13 15:25:50 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/14 16:58:15 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 #include "signal.h"
+#include "errno.h"
 
 bool	server_on = false;
 

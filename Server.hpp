@@ -6,7 +6,7 @@
 /*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/01 13:03:20 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/12 16:42:57 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/14 16:38:12 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,7 @@ class Server
 		std::string		_password;
 
 		std::vector<User *>	_users;
+		std::vector<Channel *>	_channels;
 		User				*_server_user;
 		std::string			_msg;
 		std::string			_start_time;
@@ -77,7 +78,6 @@ class Server
 		//server functions
 		int		client_message(User *user);
 		int		new_connection();
-		int		auth_user(User *user);
 		int		get_command(User *user, std::string msg);
 		void	reply(User *user, std::string prefix, std::string command,
 						std::string target, std::string message);
@@ -88,6 +88,7 @@ class Server
 
 		//server commands
 		// Command function implementations
+		int CAP(User *user, std::stringstream &command);
 		int OPER(User *user, std::stringstream &command);
 		int PASS(User *user, std::stringstream &command);
 		int QUIT(User *user, std::stringstream &command);
