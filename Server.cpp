@@ -6,7 +6,7 @@
 /*   By: fvonsovs <fvonsovs@student.42prague.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/01 13:03:09 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/14 15:52:22 by fvonsovs         ###   ########.fr       */
+/*   Updated: 2024/11/14 16:57:37 by fvonsovs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -168,6 +168,7 @@ int Server::get_command(User *user, std::string msg)
 	command_map["MODE"] = &Server::MODE;
 	command_map["INVITE"] = &Server::INVITE;
 	command_map["KICK"] = &Server::KICK;
+	command_map["JOIN"] = &Server::JOIN;
 	command_map["PART"] = &Server::PART;
 	command_map["PRIVMSG"] = &Server::PRIVMSG;
 	command_map["WHO"] = &Server::WHO;

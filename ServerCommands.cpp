@@ -6,7 +6,7 @@
 /*   By: fvonsovs <fvonsovs@student.42prague.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/07 15:14:51 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/14 16:37:27 by fvonsovs         ###   ########.fr       */
+/*   Updated: 2024/11/14 16:57:43 by fvonsovs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,7 +115,15 @@ int Server::JOIN(User *user, std::stringstream &command)
 	channel->add_member(user);
 	user->join_channel(channel);
 
-	// TODO: send join message to the user and members of channel
+	// send join message to the user and members of channel
+	std::string join_msg = ":" + user->get_nick() + " JOIN " + name + "\r\n";
+	send(user->get_fd(), join_msg.c_str(), join_msg.length(), 0);
+
+	for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
+	{
+		if (*it != user)
+			send((*it)->get_fd(), join_msg.c_str(), join_msg.length(), 0);
+	}
 
 	// send channel topic
 	if (!channel->get_topic().empty())
@@ -161,8 +169,14 @@ int Server::PART(User *user, std::stringstream &command)
 	channel->remove_member(user);
 	user->leave_channel(channel);
 
-	// TODO send PART message to users in channel
+	// send PART message to users in channel
+	std::string part_msg = ":" + user->get_nick() + " PART " + name + "\r\n";
+	for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
+		send((*it)->get_fd(), part_msg.c_str(), part_msg.length(), 0);
 
-
+	// remove empty channel
+	if (channel->get_members().empty())
+		remove_channel(name);
+		
 	return (0);
 }
