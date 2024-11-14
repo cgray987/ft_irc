@@ -3,16 +3,24 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fvonsovs <fvonsovs@student.42prague.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/01 13:03:06 by cgray             #+#    #+#             */
+<<<<<<< HEAD
 /*   Updated: 2024/11/14 16:58:15 by cgray            ###   ########.fr       */
+=======
+/*   Updated: 2024/11/14 16:57:40 by fvonsovs         ###   ########.fr       */
+>>>>>>> 6867c722a775bf43b20fdd124082098f54cc1b49
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 #include "signal.h"
+<<<<<<< HEAD
 #include "errno.h"
+=======
+#include <cerrno>
+>>>>>>> 6867c722a775bf43b20fdd124082098f54cc1b49
 
 bool	server_on = false;
 

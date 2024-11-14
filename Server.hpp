@@ -3,10 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fvonsovs <fvonsovs@student.42prague.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/01 13:03:20 by cgray             #+#    #+#             */
+<<<<<<< HEAD
 /*   Updated: 2024/11/14 16:38:12 by cgray            ###   ########.fr       */
+=======
+/*   Updated: 2024/11/14 15:52:27 by fvonsovs         ###   ########.fr       */
+>>>>>>> 6867c722a775bf43b20fdd124082098f54cc1b49
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +33,7 @@
 
 #include "User.hpp"
 #include "Colors.hpp"
+#include "Channel.hpp"
 
 # define user_id(nickname, username) (":" + nickname + "!" + username + "@localhost")
 
@@ -52,7 +57,8 @@ class Server
 		std::string			_msg;
 		std::string			_start_time;
 
-
+		std::map<std::string, Channel *> _channels;
+		
 		//default constructor
 		Server();
 
@@ -86,6 +92,11 @@ class Server
 		void	register_client(User *user);
 		void	send_server_response(User *user, std::string send_buf);
 
+		// channels
+		Channel *get_channel(const std::string &name);
+		Channel *create_channel(const std::string &name);
+		void remove_channel(const std::string &name);
+
 		//server commands
 		// Command function implementations
 		int CAP(User *user, std::stringstream &command);
@@ -104,6 +115,8 @@ class Server
 		int NICK(User *user, std::stringstream &command);
 		int TOPIC(User *user, std::stringstream &command);
 		int USER(User *user, std::stringstream &command);
+
+		int JOIN(User *user, std::stringstream &command);
 
 		//error messages
 };
