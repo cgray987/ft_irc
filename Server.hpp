@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fvonsovs <fvonsovs@student.42prague.com    +#+  +:+       +#+        */
+/*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/01 13:03:20 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/14 15:52:27 by fvonsovs         ###   ########.fr       */
+/*   Updated: 2024/11/14 17:09:09 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,7 @@ class Server
 		std::string			_start_time;
 
 		std::map<std::string, Channel *> _channels;
-		
+
 		//default constructor
 		Server();
 
@@ -79,7 +79,6 @@ class Server
 		//server functions
 		int		client_message(User *user);
 		int		new_connection();
-		int		auth_user(User *user);
 		int		get_command(User *user, std::string msg);
 		void	reply(User *user, std::string prefix, std::string command,
 						std::string target, std::string message);
@@ -95,6 +94,7 @@ class Server
 
 		//server commands
 		// Command function implementations
+		int CAP(User *user, std::stringstream &command);
 		int OPER(User *user, std::stringstream &command);
 		int PASS(User *user, std::stringstream &command);
 		int QUIT(User *user, std::stringstream &command);

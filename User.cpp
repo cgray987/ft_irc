@@ -3,7 +3,7 @@
 /*                                                        :::      ::::::::   */
 /*   User.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fvonsovs <fvonsovs@student.42prague.com    +#+  +:+       +#+        */
+/*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/04 16:02:25 by cgray             #+#    #+#             */
 /*   Updated: 2024/11/17 17:54:49 by fvonsovs         ###   ########.fr       */
@@ -30,6 +30,7 @@ int	User::get_fd() {return _fd;}
 std::string	User::get_nick(){return _nick;}
 std::string	User::get_user(){return _user;}
 std::string	User::get_read_buf(){return _read_buf;}
+std::string	User::get_prefix(){return (":" + _nick + "!" + _user + "@" + _host);}
 bool	User::get_auth(){return _auth;}
 bool	User::get_op(){return _op;}
 
@@ -37,6 +38,8 @@ void	User::set_fd(int fd) {_fd = fd;}
 void	User::set_auth(bool auth){_auth = auth;}
 void	User::set_op(bool op_status){_op = op_status;}
 void	User::set_send_buf(std::string buf){_read_buf += buf;}
+void	User::set_nick(std::string nick){_nick = nick;};
+void	User::set_user(std::string user){_user = user;};
 
 // channels
 void User::join_channel(Channel* channel)
@@ -53,4 +56,3 @@ const std::set<Channel*>& User::get_channels() const
 {
     return _channels;
 }
-

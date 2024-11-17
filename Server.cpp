@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fvonsovs <fvonsovs@student.42prague.com    +#+  +:+       +#+        */
+/*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/01 13:03:09 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/14 16:57:37 by fvonsovs         ###   ########.fr       */
+/*   Updated: 2024/11/14 17:09:48 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,15 +18,14 @@ Server	&Server::operator = (const Server &src){return (*this);}
 Server::Server(int port, std::string password) : _port(port), _password(password)
 {
 	time_t rawtime;
+	time(&rawtime);
 	struct tm *timeinfo = localtime(&rawtime);
 	char	buf[80];
 	strftime(buf, sizeof(buf), "%d-%m-%Y %H:%M:%S", timeinfo);
 	std::string str(buf);
 	_start_time = str;
 
-	//getaddrinfo?
 	//create server listening socket socket(domain, type, protocol)
-		//--unsure if we can hardcode these with AF_INET, SOCK_STREAM, 0, or need getaddrinfo
 	_server_socket = socket(AF_INET, SOCK_STREAM, 0);
 	if (_server_socket == -1)
 		throw std::runtime_error("Socket creation failure!");
@@ -71,6 +70,7 @@ Server::~Server()
 		delete _users.back();
 		_users.pop_back();
 	}
+	//delete channels?
 	delete _server_user;
 }
 
@@ -86,24 +86,21 @@ int	Server::new_connection()
 	if (connection_socket == -1)
 		throw std::runtime_error("cannot connect to user");
 
-	// std::cout << "socket: " << connection_socket << "\n";
-
 	//set conn_fd to non-blocking (must use F_SETFL to do so)
-	//might not be needed
 	fcntl(connection_socket, F_SETFL, O_NONBLOCK);
-
 
 	std::string	host = inet_ntoa(new_address.sin_addr);
 
-	std::cout << "Connected to: " << host
+	std::cout << CYN << "Connected to: " << host
 			<< ":" << new_address.sin_port
-			<< " on FD: " << connection_socket << "\n";
+			<< " on FD: " << connection_socket << "\n" << RST;
 
-	//need to store this
+	//store user
 	User *new_user = new User("", "", host);
 	_users.push_back(new_user);
 	new_user->set_fd(connection_socket);
 
+	//might need to be somewhere else
 	Server::register_client(new_user);
 
 	struct epoll_event	ev;
@@ -131,7 +128,6 @@ int	Server::client_message(User *user)
 		throw std::runtime_error("Error in recv()");
 		return (1);
 	}
-		// throw std::runtime_error("Error in recv()");
 
 	else if (bytes == 0)
 	{
@@ -140,12 +136,11 @@ int	Server::client_message(User *user)
 		return (1);
 	}
 
-	std::cout << "buf: " << buf;
+	std::cout << "\tbuf: " << buf;
 	_msg.append(buf);
 	if (_msg.find_first_of("\n") == _msg.npos)
 		return (0);
-	std::cout << "msg: " << _msg << "\n";
-
+	std::cout << "\tmsg: " << _msg << "\n";
 
 	int ret = Server::get_command(user, _msg);
 
@@ -160,6 +155,7 @@ int Server::get_command(User *user, std::string msg)
 
 	typedef int (Server::*CommandFunc)(User *, std::stringstream &);
 	std::map<std::string, CommandFunc> command_map;
+	command_map["CAP"] = &Server::CAP;
 	command_map["PASS"] = &Server::PASS;
 	command_map["QUIT"] = &Server::QUIT;
 	command_map["KILL"] = &Server::KILL;
@@ -178,7 +174,6 @@ int Server::get_command(User *user, std::string msg)
 	command_map["OPER"] = &Server::OPER;
 
 	// read each word in _msg, if word is a command, call corresponding command function
-
 	while (ss >> word)
 	{
 		std::cout << "Processing command: " << word << std::endl;
@@ -204,8 +199,8 @@ void	Server::reply(User *user, std::string prefix, std::string command,
 	std::string	reply;
 	if (!prefix.empty())
 		reply.append(prefix + " ");
-	// else
-	// 	reply.append(_server_prefix + " ");
+	else
+		reply.append("ft_irc ");
 	reply.append(command + " ");
 	if (!target.empty())
 		reply.append(target);

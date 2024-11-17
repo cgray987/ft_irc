@@ -3,17 +3,17 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: fvonsovs <fvonsovs@student.42prague.com    +#+  +:+       +#+         #
+#    By: cgray <cgray@student.42.fr>                +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/10 14:55:00 by cgray             #+#    #+#              #
-#    Updated: 2024/11/14 16:57:42 by fvonsovs         ###   ########.fr        #
+#    Updated: 2024/11/14 17:07:46 by cgray            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = ircserv
 
 CC = c++
-CFLAGS = -std=c++98 #-Wall -Werror -Wextra -g 
+CFLAGS = -std=c++98 #-Wall -Werror -Wextra -g
 
 SRC = main.cpp Server.cpp User.cpp ServerCommands.cpp Channel.cpp
 OBJ = ${SRC:.cpp = .o}
