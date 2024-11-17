@@ -6,7 +6,7 @@
 /*   By: fvonsovs <fvonsovs@student.42prague.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/13 15:28:34 by fvonsovs          #+#    #+#             */
-/*   Updated: 2024/11/13 15:44:57 by fvonsovs         ###   ########.fr       */
+/*   Updated: 2024/11/17 17:51:12 by fvonsovs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,4 +79,13 @@ void Channel::set_mode(char mode, bool value)
 bool Channel::get_mode(char mode) const
 {
     return _modes.find(mode) != _modes.end();
+}
+
+// return current channel modes as string
+std::string Channel::str_modes() const
+{
+	std::string ret = "+";
+	for (std::set<char>::const_iterator it = _modes.begin(); it != _modes.end(); ++it)
+		ret += *it;
+	return ret;
 }
