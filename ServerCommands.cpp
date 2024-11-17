@@ -6,7 +6,7 @@
 /*   By: fvonsovs <fvonsovs@student.42prague.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/07 15:14:51 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/14 16:57:43 by fvonsovs         ###   ########.fr       */
+/*   Updated: 2024/11/17 17:51:16 by fvonsovs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,11 +77,130 @@ int Server::OPER(User *user, std::stringstream &command){return (0);}
 int Server::KICK(User *user, std::stringstream &command){return (0);}
 int Server::PING(User *user, std::stringstream &command){return (0);}
 int Server::INVITE(User *user, std::stringstream &command){return (0);}
-int Server::TOPIC(User *user, std::stringstream &command){return (0);}
-int Server::MODE(User *user, std::stringstream &command){return (0);}
+
+// https://dd.ircdocs.horse/refs/commands/topic
+int Server::TOPIC(User *user, std::stringstream &command)
+{
+	std::string channel_name;
+	command >> channel_name;
+
+	if (channel_name.empty())
+	{
+		reply(user, "", "461", "TOPIC", ":Not enough parameters");
+		return 1;
+	}
+
+	Channel *channel = get_channel(channel_name);
+	if (!channel)
+	{
+		reply(user, "", "403", channel_name, ":No such channel");
+		return 1;
+	}
+
+	if (!channel->is_member(user))
+	{
+		reply(user, "", "442", channel_name, ":You're not on that channel");
+		return 1;
+	}
+
+	std::string topic;
+	getline(command, topic);
+
+	if (topic.empty())
+	{
+		// if without topic parameter, sends the current topic
+		if (!channel->get_topic().empty())
+			reply(user, "", "332", channel_name, ":" + channel->get_topic());
+		else
+			reply(user, "", "331", channel_name, ":No topic is set");		
+	}
+	else
+	{
+		// check if mode is topic settable by operator only
+		if (channel->get_mode('t') && !channel->is_operator(user))
+		{
+			reply(user, "", "482", channel_name, ":You're not a channel operator");
+			return 1;
+		}
+		
+		channel->set_topic(topic);
+
+		// notify users
+		std::string notify = ":" + user->get_nick() + "TOPIC" + channel_name + " " + topic + "\r\n";
+		for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
+			send((*it)->get_fd(), notify.c_str(), notify.length(), 0);
+	}
+
+	return (0);
+}
+
+int Server::MODE(User *user, std::stringstream &command)
+{
+	std::string target;
+	command >> target;
+
+	if (target.empty())
+	{
+		reply(user, "", "461", "MODE", ":Not enough parameters");
+		return 1;
+	}
+
+	if (target[0] == '#') // target is a channel
+	{
+		Channel *channel = get_channel(target);
+		if (!channel)
+		{
+			reply(user, "", "403", target, ":No such channel");
+			return 1;
+		}
+		if (!channel->is_operator(user))
+		{
+			reply(user, "", "482", target, ":You're not a channel operator");
+			return 1;
+		}
+
+		std::string modes;
+		command >> modes;
+
+		if (modes.empty())
+		{
+			// if arguments empty, send current modes
+			reply(user, "", "324", target, channel->str_modes());
+			return 0;
+		}
+
+		bool add = true;
+		for (size_t i = 0; i < modes.length(); ++i)
+		{
+			char c = modes[i];
+			if (c == '+')
+				add = true;
+			else if (c == '-')
+				add = false;
+			else
+				channel->set_mode(c, add);
+		}
+
+		// notify users
+		std::string notify = ":" + user->get_nick() + "MODE" + target + " " + modes + "\r\n";
+		for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
+			send((*it)->get_fd(), notify.c_str(), notify.length(), 0);
+	}
+	// handle unknown flags here?
+	
+	return (0);
+}
+
+
 int Server::WHO(User *user, std::stringstream &command){return (0);}
 int Server::LIST(User *user, std::stringstream &command){return (0);}
-int Server::PRIVMSG(User *user, std::stringstream &command){return (0);}
+
+int Server::PRIVMSG(User *user, std::stringstream &command)
+{
+	
+	
+	return (0);
+}
 
 
 // https://dd.ircdocs.horse/refs/commands/join

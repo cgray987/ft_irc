@@ -6,7 +6,7 @@
 /*   By: fvonsovs <fvonsovs@student.42prague.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/13 15:28:40 by fvonsovs          #+#    #+#             */
-/*   Updated: 2024/11/14 15:47:27 by fvonsovs         ###   ########.fr       */
+/*   Updated: 2024/11/17 17:50:58 by fvonsovs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,6 @@ class Channel
 		const std::string& get_topic() const;
 		const std::set<User*> &get_members() const;
 		const std::set<User*> &get_operators() const;
-
 		// setters
 		void add_member(User* user);
 		void remove_member(User* user);
@@ -53,5 +52,6 @@ class Channel
 		// modes
 		void set_mode(char mode, bool value);
 		bool get_mode(char mode) const;
+    	std::string str_modes() const;
 
 };

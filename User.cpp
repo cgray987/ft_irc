@@ -6,7 +6,7 @@
 /*   By: fvonsovs <fvonsovs@student.42prague.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/04 16:02:25 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/13 15:56:34 by fvonsovs         ###   ########.fr       */
+/*   Updated: 2024/11/17 17:54:49 by fvonsovs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,3 +53,4 @@ const std::set<Channel*>& User::get_channels() const
 {
     return _channels;
 }
+
