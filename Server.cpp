@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
+/*   By: khlavaty <khlavaty@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/01 13:03:09 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/14 17:09:48 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/17 02:06:37 by khlavaty         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -172,6 +172,7 @@ int Server::get_command(User *user, std::string msg)
 	command_map["TOPIC"] = &Server::TOPIC;
 	command_map["USER"] = &Server::USER;
 	command_map["OPER"] = &Server::OPER;
+	command_map["REMOVE_CHANNEL"] = &Server::REMOVE_CHANNEL;
 
 	// read each word in _msg, if word is a command, call corresponding command function
 	while (ss >> word)
@@ -184,10 +185,14 @@ int Server::get_command(User *user, std::string msg)
 			params << ss.rdbuf(); // Get the remaining parameters
 			std::cout << "Calling command function for: " << word << std::endl;
 			ret = (this->*(it->second))(user, params);
+			// clearing after processing the command
+			_msg.clear();
 		}
 		else
 		{
 			std::cout << "Command not found: " << word << std::endl;
+			// clearing invalids also
+			_msg.clear();
 		}
 	}
 	return ret;
@@ -276,13 +281,26 @@ Channel *Server::create_channel(const std::string &name)
 	return channel;
 }
 
+// I added basically notification for users that the channel
+// is being removed
+// and removing from users channel list
 void Server::remove_channel(const std::string &name)
 {
 	std::map<std::string, Channel *>::iterator it = _channels.find(name);
 
 	if (it != _channels.end())
 	{
-		delete it->second;
+		Channel *channel = it->second;
+		
+		for (std::set<User *>::iterator user_it = channel->get_members().begin();
+			user_it != channel->get_members().end(); ++user_it)
+		{
+			User *user = *user_it;
+			user->leave_channel(channel);
+			reply(user, "", "NOTICE", "", "Channel " + name + " has been removed.");
+		}
+		
+		delete channel;
 		_channels.erase(it);
 	}
 }

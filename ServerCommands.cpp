@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServerCommands.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
+/*   By: khlavaty <khlavaty@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/07 15:14:51 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/14 17:03:29 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/17 02:14:22 by khlavaty         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -144,6 +144,12 @@ int Server::JOIN(User *user, std::stringstream &command)
 		return 0;
 
 	channel->add_member(user);
+	// added so i can remove a channel as a testuser
+	if (channel->get_operators().empty())
+	{
+		channel->add_operator(user);
+		std::cout << user->get_nick() << " has been made a channel operator for " << name << std::endl;
+	}
 	user->join_channel(channel);
 
 	// send join message to the user and members of channel
@@ -210,4 +216,34 @@ int Server::PART(User *user, std::stringstream &command)
 		remove_channel(name);
 
 	return (0);
+}
+
+int Server::REMOVE_CHANNEL(User *user, std::stringstream &command)
+{
+	std::string channel_name;
+	command >> channel_name;
+	
+	if (channel_name.empty())
+	{
+		// ERR_NEEDMOREPARAMS
+		reply(user, "", "461", "REMOVE_CHANNEL", ":Not enough parameters");
+		return 1;
+	}
+	
+	Channel *channel = get_channel(channel_name);
+	if(!channel)
+	{
+		reply(user, "", "403", channel_name, ":No such channel");// ERR_NOSUCHCHANNEL
+		return 1;
+	}
+	if(!channel->is_operator(user))
+	{
+		// its from here if you were wondering :D https://datatracker.ietf.org/doc/html/rfc2812
+		reply(user, "", "482", channel_name, ":You're not a channel operator"); // ERR_CHANOPRIVSNEEDED
+		return 1;
+	}
+
+	remove_channel(channel_name);
+	std::cout << "Channel " << channel_name << " removed successfully." << std::endl;
+	return 0;
 }
