@@ -6,7 +6,7 @@
 /*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/07 15:14:51 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/17 17:51:16 by fvonsovs         ###   ########.fr       */
+/*   Updated: 2024/11/18 13:17:32 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -143,7 +143,7 @@ int Server::TOPIC(User *user, std::stringstream &command)
 		if (!channel->get_topic().empty())
 			reply(user, "", "332", channel_name, ":" + channel->get_topic());
 		else
-			reply(user, "", "331", channel_name, ":No topic is set");		
+			reply(user, "", "331", channel_name, ":No topic is set");
 	}
 	else
 	{
@@ -153,7 +153,7 @@ int Server::TOPIC(User *user, std::stringstream &command)
 			reply(user, "", "482", channel_name, ":You're not a channel operator");
 			return 1;
 		}
-		
+
 		channel->set_topic(topic);
 
 		// notify users
@@ -218,7 +218,7 @@ int Server::MODE(User *user, std::stringstream &command)
 			send((*it)->get_fd(), notify.c_str(), notify.length(), 0);
 	}
 	// handle unknown flags here?
-	
+
 	return (0);
 }
 
@@ -228,8 +228,8 @@ int Server::LIST(User *user, std::stringstream &command){return (0);}
 
 int Server::PRIVMSG(User *user, std::stringstream &command)
 {
-	
-	
+
+
 	return (0);
 }
 
@@ -263,6 +263,12 @@ int Server::JOIN(User *user, std::stringstream &command)
 		return 0;
 
 	channel->add_member(user);
+	// added so i can remove a channel as a testuser
+	if (channel->get_operators().empty())
+	{
+		channel->add_operator(user);
+		std::cout << user->get_nick() << " has been made a channel operator for " << name << std::endl;
+	}
 	user->join_channel(channel);
 
 	// send join message to the user and members of channel
@@ -329,4 +335,34 @@ int Server::PART(User *user, std::stringstream &command)
 		remove_channel(name);
 
 	return (0);
+}
+
+int Server::REMOVE_CHANNEL(User *user, std::stringstream &command)
+{
+	std::string channel_name;
+	command >> channel_name;
+
+	if (channel_name.empty())
+	{
+		// ERR_NEEDMOREPARAMS
+		reply(user, "", "461", "REMOVE_CHANNEL", ":Not enough parameters");
+		return 1;
+	}
+
+	Channel *channel = get_channel(channel_name);
+	if(!channel)
+	{
+		reply(user, "", "403", channel_name, ":No such channel");// ERR_NOSUCHCHANNEL
+		return 1;
+	}
+	if(!channel->is_operator(user))
+	{
+		// its from here if you were wondering :D https://datatracker.ietf.org/doc/html/rfc2812
+		reply(user, "", "482", channel_name, ":You're not a channel operator"); // ERR_CHANOPRIVSNEEDED
+		return 1;
+	}
+
+	remove_channel(channel_name);
+	std::cout << "Channel " << channel_name << " removed successfully." << std::endl;
+	return 0;
 }

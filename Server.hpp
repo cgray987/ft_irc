@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
+/*   By: khlavaty <khlavaty@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/01 13:03:20 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/14 17:09:09 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/17 01:58:42 by khlavaty         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,6 +112,7 @@ class Server
 		int USER(User *user, std::stringstream &command);
 
 		int JOIN(User *user, std::stringstream &command);
+		int REMOVE_CHANNEL(User *user, std::stringstream &command); // needs a better name, probably :D
 
 		//error messages
 };
