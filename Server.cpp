@@ -6,7 +6,7 @@
 /*   By: khlavaty <khlavaty@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/01 13:03:09 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/17 02:06:37 by khlavaty         ###   ########.fr       */
+/*   Updated: 2024/11/18 23:38:10 by khlavaty         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -138,13 +138,21 @@ int	Server::client_message(User *user)
 
 	std::cout << "\tbuf: " << buf;
 	_msg.append(buf);
-	if (_msg.find_first_of("\n") == _msg.npos)
-		return (0);
-	std::cout << "\tmsg: " << _msg << "\n";
+	
+	// processing each commang in _msg
+	std::stringstream ss(_msg);
+	std::string line;
+	while(std::getline(ss, line, '\n'))
+	{
+		if(line.empty()) continue;
+		std::cout << "\tProcessing command: " << line << std::endl;
+		get_command(user, line);
+	}
+	
+	// Clearing the processed part of _msg
+	_msg.clear();
 
-	int ret = Server::get_command(user, _msg);
-
-	return (ret);
+	return 0;
 }
 
 int Server::get_command(User *user, std::string msg)
@@ -174,26 +182,27 @@ int Server::get_command(User *user, std::string msg)
 	command_map["OPER"] = &Server::OPER;
 	command_map["REMOVE_CHANNEL"] = &Server::REMOVE_CHANNEL;
 
+	// made it so it would process commands individually
 	// read each word in _msg, if word is a command, call corresponding command function
-	while (ss >> word)
+	
+	ss >> word;
+	std::cout << "Processing command: " << word << std::endl;
+	
+	std::map<std::string, CommandFunc>::iterator it = command_map.find(word);
+	if (it != command_map.end())
 	{
-		std::cout << "Processing command: " << word << std::endl;
-		std::map<std::string, CommandFunc>::iterator it = command_map.find(word);
-		if (it != command_map.end())
-		{
-			std::stringstream params;
-			params << ss.rdbuf(); // Get the remaining parameters
-			std::cout << "Calling command function for: " << word << std::endl;
-			ret = (this->*(it->second))(user, params);
-			// clearing after processing the command
-			_msg.clear();
-		}
-		else
-		{
-			std::cout << "Command not found: " << word << std::endl;
-			// clearing invalids also
-			_msg.clear();
-		}
+		std::stringstream params;
+		params << ss.rdbuf(); // Get the remaining parameters
+		std::cout << "Calling command function for: " << word << std::endl;
+		ret = (this->*(it->second))(user, params);
+		// clearing after processing the command
+		// _msg.clear();
+	}
+	else
+	{
+		reply(user, "", "421", word, ":Unknown command"); // ERR_UNKNOWNCOMMAND
+		// clearing invalids also
+		// _msg.clear();
 	}
 	return ret;
 }
