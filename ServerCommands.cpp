@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServerCommands.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
+/*   By: khlavaty <khlavaty@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/07 15:14:51 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/19 15:13:27 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/18 23:06:42 by khlavaty         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -277,11 +277,53 @@ int Server::LIST(User *user, std::stringstream &command){return (0);}
 
 int Server::PRIVMSG(User *user, std::stringstream &command)
 {
-	//differentiate between channel message and priv msg to a user
-
-
-	//need to check channel existence
-	//check if user exist
+	std::string target, message;
+	// getting the target (nickname or channel name)
+	command >> target;
+	
+	// no recipient error
+	if(target.empty())
+	{
+		reply(user, "", "411", "", ":No recipient given (PRIVMSG)");
+		return 1;
+	}
+	// getting the rest of the message
+	getline(command, message);
+	// trimming the : from message
+	if(!message.empty() && message[0] == ' ')
+		message.erase(0, 1);
+	if (!message.empty() && message[0] == ':')
+		message = message.substr(1);
+	
+	// No message to send error
+	if(message.empty())
+	{
+		reply(user, "", "412", "", ":No text to send");
+		return 1;
+	}
+	// finding the target (nickname or channel name)
+	User *target_user = NULL;
+	for (std::vector<User *>::iterator it = _users.begin(); it != _users.end(); ++it)
+	{
+		if((*it)->get_nick() == target)
+		{
+			target_user = *it;
+			break;
+		}
+	}
+	
+	// no target found error
+	if(!target_user)
+	{
+		reply(user, "", "401", target, ":No such nick/channel");
+		return 1;
+	}
+	
+	// constructing the message
+	std::string privmsg = ":" + user->get_nick() + " PRIVMSG " + target + " :" + message + "\r\n";
+	
+	// sending it
+	send(target_user->get_fd(), privmsg.c_str(), privmsg.length(), 0);
 	return (0);
 }
 
