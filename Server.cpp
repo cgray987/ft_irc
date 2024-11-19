@@ -5,10 +5,11 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/11/01 13:03:09 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/19 15:04:20 by cgray            ###   ########.fr       */
+/*   Created: Invalid date        by                   #+#    #+#             */
+/*   Updated: 2024/11/19 15:07:16 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 
 #include "Server.hpp"
 
@@ -128,6 +129,9 @@ int	Server::new_connection()
 
 	//might need to be somewhere else
 	Server::register_client(new_user);
+
+	// new_user->set_auth(true);
+	// ^^ might have to use this here instead of register_client as we are now registering in USER and NICK
 
 	struct epoll_event	ev;
 	ev.events = EPOLLIN | EPOLLET;

@@ -5,10 +5,11 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/11/04 16:02:28 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/18 13:24:01 by cgray            ###   ########.fr       */
+/*   Created: Invalid date        by                   #+#    #+#             */
+/*   Updated: 2024/11/19 15:13:59 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 
 #pragma once
 
@@ -25,9 +26,11 @@ class User
 		std::string	_nick;
 		std::string	_user;
 		std::string	_host;
+		std::string _realname;
 		int			_fd;
 		bool		_auth;
 		bool		_op;
+		bool		_registered;
 		std::string	_read_buf;
 		// std::string	_user_messge;
 
@@ -45,19 +48,24 @@ class User
 		std::string	get_nick();
 		std::string	get_user();
 		std::string	get_host();
+		std::string	get_realname();
+
 		std::string	get_prefix();
 		std::string	get_read_buf();
 
 		bool		get_auth();
 		bool		get_op();
-
+		bool		get_reg();
 
 		//setters
 		void	set_fd(int fd);
 		void	set_nick(std::string nick);
 		void	set_user(std::string user);
 		void	set_host(std::string host);
+		void	set_realname(std::string nick);
 		void	set_auth(bool auth);
+		void	set_reg(bool reg);
+
 		void	set_op(bool op_status);
 		void	set_send_buf(std::string buf);
 
