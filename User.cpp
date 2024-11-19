@@ -6,7 +6,7 @@
 /*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/04 16:02:25 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/17 17:54:49 by fvonsovs         ###   ########.fr       */
+/*   Updated: 2024/11/18 13:44:20 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ User::User(std::string nick, std::string user, std::string host) : _nick(nick), 
 }
 User::~User()
 {
-	std::cout << "user destructor: " << _user << "\n";
+	std::cout << "user destructor: " << _user  << "on fd: " << this->get_fd() << "\n";
 	if (_fd != -1)
 		close(_fd);
 }

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   User.hpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fvonsovs <fvonsovs@student.42prague.com    +#+  +:+       +#+        */
+/*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/04 16:02:28 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/13 15:46:58 by fvonsovs         ###   ########.fr       */
+/*   Updated: 2024/11/18 13:24:01 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@ class User
 		bool		_auth;
 		bool		_op;
 		std::string	_read_buf;
+		// std::string	_user_messge;
 
 		std::set<Channel *> _channels;
 

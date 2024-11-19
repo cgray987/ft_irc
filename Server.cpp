@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: khlavaty <khlavaty@student.42.fr>          +#+  +:+       +#+        */
+/*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/01 13:03:09 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/17 02:06:37 by khlavaty         ###   ########.fr       */
+/*   Updated: 2024/11/19 15:04:20 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,8 @@ Server::Server(const Server &src){*this = src;}
 Server	&Server::operator = (const Server &src){return (*this);}
 Server::Server(int port, std::string password) : _port(port), _password(password)
 {
+	init_command_map();
+
 	time_t rawtime;
 	time(&rawtime);
 	struct tm *timeinfo = localtime(&rawtime);
@@ -72,6 +74,30 @@ Server::~Server()
 	}
 	//delete channels?
 	delete _server_user;
+}
+
+void	Server::init_command_map()
+{
+	typedef int (Server::*CommandFunc)(User *, std::stringstream &);
+	std::map<std::string, CommandFunc> command_map;
+	command_map["CAP"] = &Server::CAP;
+	command_map["PASS"] = &Server::PASS;
+	command_map["QUIT"] = &Server::QUIT;
+	command_map["KILL"] = &Server::KILL;
+	command_map["PING"] = &Server::PING;
+	command_map["LIST"] = &Server::LIST;
+	command_map["MODE"] = &Server::MODE;
+	command_map["INVITE"] = &Server::INVITE;
+	command_map["KICK"] = &Server::KICK;
+	command_map["JOIN"] = &Server::JOIN;
+	command_map["PART"] = &Server::PART;
+	command_map["PRIVMSG"] = &Server::PRIVMSG;
+	command_map["WHO"] = &Server::WHO;
+	command_map["NICK"] = &Server::NICK;
+	command_map["TOPIC"] = &Server::TOPIC;
+	command_map["USER"] = &Server::USER;
+	command_map["OPER"] = &Server::OPER;
+	command_map["REMOVE_CHANNEL"] = &Server::REMOVE_CHANNEL;
 }
 
 int	Server::new_connection()
@@ -144,6 +170,7 @@ int	Server::client_message(User *user)
 
 	int ret = Server::get_command(user, _msg);
 
+	_msg.clear();
 	return (ret);
 }
 
@@ -181,9 +208,13 @@ int Server::get_command(User *user, std::string msg)
 		std::map<std::string, CommandFunc>::iterator it = command_map.find(word);
 		if (it != command_map.end())
 		{
+
+			//JOIN test ajklsdfj TOPIC test
 			std::stringstream params;
 			params << ss.rdbuf(); // Get the remaining parameters
-			std::cout << "Calling command function for: " << word << std::endl;
+			//TODO find way to extract next command if it appears in params
+
+			std::cout << "Calling command function for: " << word << "\n with params: " << params.str() << std::endl;
 			ret = (this->*(it->second))(user, params);
 			// clearing after processing the command
 			_msg.clear();
@@ -196,6 +227,23 @@ int Server::get_command(User *user, std::string msg)
 		}
 	}
 	return ret;
+}
+
+std::string	Server::find_next_cmd(std::stringstream params)
+{
+	std::string	next;
+	std::string	parsed_params;
+	while (params >> next)
+	{
+		if (_command_map.find(next) == _command_map.end())
+		{
+			parsed_params.append(" " + next);
+		}
+		else
+			break;
+	}
+	std::cout << "parsed: " << parsed_params << "\n";
+	return parsed_params;
 }
 
 void	Server::reply(User *user, std::string prefix, std::string command,
@@ -241,7 +289,7 @@ void	Server::remove_user(User *user)
 void	Server::register_client(User *user)
 {
 	user->set_send_buf(RPL_WELCOME(user_id(user->get_nick(), user->get_user()), user->get_nick()));
-	user->set_send_buf(RPL_YOURHOST(user->get_nick(), "ft_irc", "0.01"));
+	user->set_send_buf(RPL_YOURHOST(user->get_nick(), "ft_irc", "v0.01"));
 	user->set_send_buf(RPL_CREATED(user->get_nick(), this->get_start_time()));
 	user->set_send_buf(RPL_MYINFO(user->get_nick(), "localhost", "0.01", "io", "kost", "k"));
 	user->set_send_buf(RPL_ISUPPORT(user->get_nick(), "CHANNELLEN=32 NICKLEN=9 TOPICLEN=307"));
@@ -291,7 +339,7 @@ void Server::remove_channel(const std::string &name)
 	if (it != _channels.end())
 	{
 		Channel *channel = it->second;
-		
+
 		for (std::set<User *>::iterator user_it = channel->get_members().begin();
 			user_it != channel->get_members().end(); ++user_it)
 		{
@@ -299,7 +347,7 @@ void Server::remove_channel(const std::string &name)
 			user->leave_channel(channel);
 			reply(user, "", "NOTICE", "", "Channel " + name + " has been removed.");
 		}
-		
+
 		delete channel;
 		_channels.erase(it);
 	}

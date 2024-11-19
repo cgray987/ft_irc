@@ -6,7 +6,7 @@
 /*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/07 15:14:51 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/18 13:17:32 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/19 13:45:12 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,8 +18,6 @@
 	--unsure if we can just ignore */
 int Server::CAP(User *user, std::stringstream &command)
 {
-	std::string buf;
-	command >> buf;
 	return (0);
 }
 
@@ -228,8 +226,11 @@ int Server::LIST(User *user, std::stringstream &command){return (0);}
 
 int Server::PRIVMSG(User *user, std::stringstream &command)
 {
+	//differentiate between channel message and priv msg to a user
 
 
+	//need to check channel existence
+	//check if user exist
 	return (0);
 }
 
