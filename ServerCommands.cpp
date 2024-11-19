@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServerCommands.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fvonsovs <fvonsovs@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/07 15:14:51 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/18 13:17:32 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/19 14:43:04 by fvonsovs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,15 +14,19 @@
 
 #define VALID_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789[]{}\\|^`–-_"
 
+
+
 /* CAP LS --supposed to send server's capabilities to client
-	--unsure if we can just ignore */
+ 	can be ignored - https://ircv3.net/specs/extensions/capability-negotiation.html */
 int Server::CAP(User *user, std::stringstream &command)
 {
-	std::string buf;
-	command >> buf;
+	// std::string buf;
+	// command >> buf;
 	return (0);
 }
 
+// https://modern.ircdocs.horse/#nick-message
+// can ignore ERR_NICKCOLLISION
 int Server::NICK(User *user, std::stringstream &command)
 {
 	std::string	nick;
@@ -31,38 +35,83 @@ int Server::NICK(User *user, std::stringstream &command)
 	command >> nick;
 	if (nick.empty())
 	{
-		Server::reply(user, "", "431", "", ":No nickname given"); //ERR_NONICKNAMEGIVEN
+		reply(user, "", "431", "", ":No nickname given"); //ERR_NONICKNAMEGIVEN
 		valid = false;
 	}
 	else if (nick.length() > 30)
 		nick = nick.substr(0, 30);
-	else if (nick.find_first_not_of(VALID_CHARS) != nick.npos
-		|| isdigit(nick[0]))
+	else if (nick.find_first_not_of(VALID_CHARS) != nick.npos || isdigit(nick[0]))
 	{
-		Server::reply(user, "", "432", "", ":Erroneus nickname"); //ERR_ERRONEUSNICKNAME
-		valid = false;
+		reply(user, "", "432", "", ":Erroneus nickname"); //ERR_ERRONEUSNICKNAME
+		return 1;
 	}
-	//ERR_NICKNAMEINUSE
-	//set nickname
-	if (valid == true)
+	// check for nick in use
+	for (std::vector<User *>::iterator it = _users.begin(); it != _users.end(); ++it)
 	{
-		//need to add to channels?
-		reply(user, user->get_prefix(), "NICK", ":" + nick, "");
-		user->set_nick(nick);
+		if ((*it)->get_nick() == nick && (*it) != user)
+		{
+			reply(user, "", "433", nick, ":Nickname is already in use"); //ERR_NICKNAMEINUSE
+		}
 	}
+	// check is user already registered
+	if (user->get_reg())
+	{
+		std::string nick_msg = ":" + user->get_prefix() + " NICK :" + nick + "\r\n";
+		// send msg to all users
+		for (std::vector<User *>::iterator it = _users.begin(); it != _users.end(); ++it)
+			send((*it)->get_fd(), nick_msg.c_str(), nick_msg.length(), 0);
+	}
+
+	user->set_nick(nick);
+
+	// if we have both USER and NICK set, and user is authenticated, register the client
+	if (!user->get_user().empty() && user->get_auth())
+    {
+        register_client(user);
+    }
+
 	return (0);
 }
 
+// https://modern.ircdocs.horse/#user-message
 int Server::USER(User *user, std::stringstream &command)
 {
-	if (user->get_auth() == false)
+	if (user->get_reg())
 	{
-		std::cout << RED << "Disconnected " << user->get_nick() << "due to auth failure\n" << RST;
+		reply(user, "", "462", "", ":You may not reregister"); //ERR_NICKNAMEINUSE
+		return 1;
 	}
-	std::string	username;
-	command >> username;
+
+	std::string username, hostname, servername, realname;
+	command >> username >> hostname >> servername;
+
+	getline(command, realname);
+	// remove leading colon
+	if (!realname.empty() && realname[0] == ':')
+		realname = realname.substr(1);
+
+	if (username.empty() || realname.empty())
+    {
+        Server::reply(user, "", "461", "USER", ":Not enough parameters"); // ERR_NEEDMOREPARAMS
+        return 1;
+    }
+    if (!user->get_auth() && !Server::get_password().empty())
+    {
+        Server::reply(user, "", "464", "", ":Password required"); // ERR_PASSWDMISMATCH
+        return 1;
+    }
+
 	user->set_user(username);
-	return (0);
+	user->set_host(hostname);
+	user->set_realname(realname);
+
+	// if NICK and USER are set and user is authenticated, register the user
+	if (!user->get_nick().empty() && user->get_auth())
+    {
+        register_client(user);
+    }
+
+    return 0;
 }
 
 int Server::PASS(User *user, std::stringstream &command)
