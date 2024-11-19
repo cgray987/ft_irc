@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   User.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
+/*   By: khlavaty <khlavaty@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/04 16:02:25 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/19 15:13:42 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/19 23:02:10 by khlavaty         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,10 @@ void	User::set_user(std::string user){_user = user;};
 void	User::set_realname(std::string realname){_realname = realname;};
 void	User::set_reg(bool reg){_registered = reg;};
 
-
+void	User::set_host(std::string host)
+{
+	_host = host;
+}
 // channels
 void User::join_channel(Channel* channel)
 {
