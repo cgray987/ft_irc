@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: khlavaty <khlavaty@student.42.fr>          +#+  +:+       +#+        */
+/*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/01 13:03:20 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/17 01:58:42 by khlavaty         ###   ########.fr       */
+/*   Updated: 2024/11/19 14:57:14 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,8 +54,12 @@ class Server
 
 		std::map<std::string, Channel *> _channels;
 
+		typedef int (Server::*CommandFunc)(User *, std::stringstream &);
+		std::map<std::string, CommandFunc> _command_map;
+
 		//default constructor
 		Server();
+		void	init_command_map();
 
 	public:
 		//constructors
@@ -80,6 +84,7 @@ class Server
 		int		client_message(User *user);
 		int		new_connection();
 		int		get_command(User *user, std::string msg);
+		std::string	find_next_cmd(std::stringstream params);
 		void	reply(User *user, std::string prefix, std::string command,
 						std::string target, std::string message);
 		void	add_user(User *user);
@@ -116,3 +121,4 @@ class Server
 
 		//error messages
 };
+

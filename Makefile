@@ -6,14 +6,14 @@
 #    By: cgray <cgray@student.42.fr>                +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/10 14:55:00 by cgray             #+#    #+#              #
-#    Updated: 2024/11/14 17:07:46 by cgray            ###   ########.fr        #
+#    Updated: 2024/11/15 13:42:00 by cgray            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = ircserv
 
 CC = c++
-CFLAGS = -std=c++98 #-Wall -Werror -Wextra -g
+CFLAGS = -std=c++98 -g #-Wall -Werror -Wextra
 
 SRC = main.cpp Server.cpp User.cpp ServerCommands.cpp Channel.cpp
 OBJ = ${SRC:.cpp = .o}
