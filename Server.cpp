@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: khlavaty <khlavaty@student.42.fr>          +#+  +:+       +#+        */
+/*   By: fvonsovs <fvonsovs@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/01 13:03:09 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/17 02:06:37 by khlavaty         ###   ########.fr       */
+/*   Updated: 2024/11/19 14:37:28 by fvonsovs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,6 +102,9 @@ int	Server::new_connection()
 
 	//might need to be somewhere else
 	Server::register_client(new_user);
+	
+	// new_user->set_auth(true);
+	// ^^ might have to use this here instead of register_client as we are now registering in USER and NICK
 
 	struct epoll_event	ev;
 	ev.events = EPOLLIN | EPOLLET;

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   User.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fvonsovs <fvonsovs@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/04 16:02:25 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/17 17:54:49 by fvonsovs         ###   ########.fr       */
+/*   Updated: 2024/11/19 14:39:40 by fvonsovs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,10 +29,14 @@ User::~User()
 int	User::get_fd() {return _fd;}
 std::string	User::get_nick(){return _nick;}
 std::string	User::get_user(){return _user;}
+std::string	User::get_realname(){return _realname;}
+
 std::string	User::get_read_buf(){return _read_buf;}
 std::string	User::get_prefix(){return (":" + _nick + "!" + _user + "@" + _host);}
 bool	User::get_auth(){return _auth;}
 bool	User::get_op(){return _op;}
+bool	User::get_reg(){return _registered;};
+
 
 void	User::set_fd(int fd) {_fd = fd;}
 void	User::set_auth(bool auth){_auth = auth;}
@@ -40,6 +44,9 @@ void	User::set_op(bool op_status){_op = op_status;}
 void	User::set_send_buf(std::string buf){_read_buf += buf;}
 void	User::set_nick(std::string nick){_nick = nick;};
 void	User::set_user(std::string user){_user = user;};
+void	User::set_realname(std::string realname){_realname = realname;};
+void	User::set_reg(bool reg){_registered = reg;};
+
 
 // channels
 void User::join_channel(Channel* channel)
