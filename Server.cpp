@@ -6,7 +6,7 @@
 /*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: Invalid date        by                   #+#    #+#             */
-/*   Updated: 2024/11/19 15:07:16 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/20 15:31:15 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,7 @@ Server::Server(int port, std::string password) : _port(port), _password(password
 	if (_epoll_socket == -1)
 		throw std::runtime_error("epoll error!");
 
-	_server_user = new User("ServerUser",  "", "");
+	_server_user = new User("ServerNick", "ServerUser", "");
 	_server_user->set_fd(_server_socket);
 	event.events = EPOLLIN | EPOLLET;
 	event.data.ptr = _server_user;
@@ -99,6 +99,7 @@ void	Server::init_command_map()
 	command_map["USER"] = &Server::USER;
 	command_map["OPER"] = &Server::OPER;
 	command_map["REMOVE_CHANNEL"] = &Server::REMOVE_CHANNEL;
+	this->_command_map = command_map;
 }
 
 int	Server::new_connection()
@@ -128,9 +129,9 @@ int	Server::new_connection()
 	new_user->set_fd(connection_socket);
 
 	//might need to be somewhere else
-	Server::register_client(new_user);
+	// Server::register_client(new_user);
 
-	// new_user->set_auth(true);
+	// new_user->set_auth(true); --now in PASS
 	// ^^ might have to use this here instead of register_client as we are now registering in USER and NICK
 
 	struct epoll_event	ev;
@@ -166,16 +167,19 @@ int	Server::client_message(User *user)
 		return (1);
 	}
 
-	std::cout << "\tbuf: " << buf;
+	// std::cout << "\tbuf: " << buf;
 	_msg.append(buf);
-	if (_msg.find_first_of("\n") == _msg.npos)
-		return (0);
-	std::cout << "\tmsg: " << _msg << "\n";
 
-	int ret = Server::get_command(user, _msg);
-
-	_msg.clear();
-	return (ret);
+	// processing each commang in _msg
+	std::stringstream ss(_msg);
+	std::string line;
+	while(std::getline(ss, line, '\n'))
+	{
+		if(line.empty()) continue;
+		std::cout << "\tProcessing command: " << line << std::endl;
+		get_command(user, line);
+	}
+	return 0;
 }
 
 int Server::get_command(User *user, std::string msg)
@@ -183,71 +187,26 @@ int Server::get_command(User *user, std::string msg)
 	std::stringstream	ss(msg);
 	std::string			word;
 	int					ret = 0;
+	ss >> word;
 
-	typedef int (Server::*CommandFunc)(User *, std::stringstream &);
-	std::map<std::string, CommandFunc> command_map;
-	command_map["CAP"] = &Server::CAP;
-	command_map["PASS"] = &Server::PASS;
-	command_map["QUIT"] = &Server::QUIT;
-	command_map["KILL"] = &Server::KILL;
-	command_map["PING"] = &Server::PING;
-	command_map["LIST"] = &Server::LIST;
-	command_map["MODE"] = &Server::MODE;
-	command_map["INVITE"] = &Server::INVITE;
-	command_map["KICK"] = &Server::KICK;
-	command_map["JOIN"] = &Server::JOIN;
-	command_map["PART"] = &Server::PART;
-	command_map["PRIVMSG"] = &Server::PRIVMSG;
-	command_map["WHO"] = &Server::WHO;
-	command_map["NICK"] = &Server::NICK;
-	command_map["TOPIC"] = &Server::TOPIC;
-	command_map["USER"] = &Server::USER;
-	command_map["OPER"] = &Server::OPER;
-	command_map["REMOVE_CHANNEL"] = &Server::REMOVE_CHANNEL;
-
-	// read each word in _msg, if word is a command, call corresponding command function
-	while (ss >> word)
+	std::map<std::string, CommandFunc>::iterator it = _command_map.find(word);
+	if (it != _command_map.end())
 	{
-		std::cout << "Processing command: " << word << std::endl;
-		std::map<std::string, CommandFunc>::iterator it = command_map.find(word);
-		if (it != command_map.end())
-		{
-
-			//JOIN test ajklsdfj TOPIC test
-			std::stringstream params;
-			params << ss.rdbuf(); // Get the remaining parameters
-			//TODO find way to extract next command if it appears in params
-
-			std::cout << "Calling command function for: " << word << "\n with params: " << params.str() << std::endl;
-			ret = (this->*(it->second))(user, params);
-			// clearing after processing the command
+		std::stringstream params;
+		params << ss.rdbuf(); // Get the remaining parameters
+		std::cout << "Calling command function for: " << word << " with params: " << RED << params.str() << std::endl << RST;
+		ret = (this->*(it->second))(user, params);
+		// clearing after processing the command
+		if (ret == 0)
 			_msg.clear();
-		}
-		else
-		{
-			std::cout << "Command not found: " << word << std::endl;
-			// clearing invalids also
-			_msg.clear();
-		}
+	}
+	else
+	{
+		reply(user, "", "421", word, ":Unknown command"); // ERR_UNKNOWNCOMMAND
+		// clearing invalids also --can't do this because command might be valid, but not complete (nc ctrl-d from subject)
+		// _msg.clear();
 	}
 	return ret;
-}
-
-std::string	Server::find_next_cmd(std::stringstream params)
-{
-	std::string	next;
-	std::string	parsed_params;
-	while (params >> next)
-	{
-		if (_command_map.find(next) == _command_map.end())
-		{
-			parsed_params.append(" " + next);
-		}
-		else
-			break;
-	}
-	std::cout << "parsed: " << parsed_params << "\n";
-	return parsed_params;
 }
 
 void	Server::reply(User *user, std::string prefix, std::string command,
@@ -278,15 +237,12 @@ void	Server::add_user(User *user)
 {
 	_users.push_back(user);
 	register_client(user);
-
 }
 
 void	Server::remove_user(User *user)
 {
 	_users.erase(std::find(_users.begin(), _users.end(), user));
-
 	//TODO will need to remove from each channel as well
-
 	delete user;
 }
 
@@ -297,6 +253,7 @@ void	Server::register_client(User *user)
 	user->set_send_buf(RPL_CREATED(user->get_nick(), this->get_start_time()));
 	user->set_send_buf(RPL_MYINFO(user->get_nick(), "localhost", "0.01", "io", "kost", "k"));
 	user->set_send_buf(RPL_ISUPPORT(user->get_nick(), "CHANNELLEN=32 NICKLEN=9 TOPICLEN=307"));
+	user->set_reg(true);
 	Server::send_server_response(user, user->get_read_buf());
 }
 
@@ -308,7 +265,6 @@ void	Server::send_server_response(User *user, std::string send_buf)
 	send(user->get_fd(), send_buf.c_str(), send_buf.size(), 0);
 	while (getline(buf, reply))
 		std::cout << "Server Message to client [" << user->get_fd() << "]: " << BLU << reply << "\n" << RST;
-
 }
 
 std::string	Server::get_password(){return (_password);}

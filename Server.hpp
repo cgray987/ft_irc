@@ -6,7 +6,7 @@
 /*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/01 13:03:20 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/19 14:57:14 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/19 16:16:28 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,7 +84,8 @@ class Server
 		int		client_message(User *user);
 		int		new_connection();
 		int		get_command(User *user, std::string msg);
-		std::string	find_next_cmd(std::stringstream params);
+		std::string	find_next_cmd(std::stringstream &params, std::stringstream &parsed_params);
+
 		void	reply(User *user, std::string prefix, std::string command,
 						std::string target, std::string message);
 		void	add_user(User *user);

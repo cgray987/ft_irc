@@ -6,7 +6,7 @@
 /*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/07 15:14:51 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/19 15:13:27 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/20 15:33:42 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,9 +66,9 @@ int Server::NICK(User *user, std::stringstream &command)
 
 	// if we have both USER and NICK set, and user is authenticated, register the client
 	if (!user->get_user().empty() && user->get_auth())
-    {
-        register_client(user);
-    }
+	{
+		register_client(user);
+	}
 
 	return (0);
 }
@@ -91,15 +91,15 @@ int Server::USER(User *user, std::stringstream &command)
 		realname = realname.substr(1);
 
 	if (username.empty() || realname.empty())
-    {
-        Server::reply(user, "", "461", "USER", ":Not enough parameters"); // ERR_NEEDMOREPARAMS
-        return 1;
-    }
-    if (!user->get_auth() && !Server::get_password().empty())
-    {
-        Server::reply(user, "", "464", "", ":Password required"); // ERR_PASSWDMISMATCH
-        return 1;
-    }
+	{
+		Server::reply(user, "", "461", "USER", ":Not enough parameters"); // ERR_NEEDMOREPARAMS
+		return 1;
+	}
+	if (!user->get_auth() && !Server::get_password().empty())
+	{
+		Server::reply(user, "", "464", "", ":Password required"); // ERR_PASSWDMISMATCH
+		return 1;
+	}
 
 	user->set_user(username);
 	user->set_host(hostname);
@@ -107,23 +107,25 @@ int Server::USER(User *user, std::stringstream &command)
 
 	// if NICK and USER are set and user is authenticated, register the user
 	if (!user->get_nick().empty() && user->get_auth())
-    {
-        register_client(user);
-    }
-
-    return 0;
+	{
+		register_client(user);
+	}
+	// std::cout << "user registered as: " << user->get_user() << " with nick: " << user->get_nick() << "\n";
+	return 0;
 }
 
 int Server::PASS(User *user, std::stringstream &command)
 {
 	std::string	password;
 	command >> password;
+	std::cout << "pass should be: " << Server::get_password() << "but is: " << password << "\n";
 	if (Server::get_password() != password)
 		Server::reply(user, "", "464", user->get_nick(), ":Password incorrect"); //ERR_PASSWDMISMATCH
 	else if (user->get_auth() == false)
 		user->set_auth(true);
 	else
-		Server::reply(user, "", "", user->get_nick(), ":User already authenticated."); //not standard irc error -- might need to be removed
+		Server::reply(user, "", "", user->get_nick(), ":User already authenticated."); //not standard irc error -- might need to be removed/changed to std error
+	// std::cout << "user authed? " << user->get_auth() << "\n";
 	return (0);
 }
 int Server::QUIT(User *user, std::stringstream &command)
@@ -277,11 +279,56 @@ int Server::LIST(User *user, std::stringstream &command){return (0);}
 
 int Server::PRIVMSG(User *user, std::stringstream &command)
 {
-	//differentiate between channel message and priv msg to a user
+	std::string target, message;
+	// getting the target (nickname or channel name)
+	command >> target;
 
+	// no recipient error
+	if(target.empty())
+	{
+		reply(user, "", "411", "", ":No recipient given (PRIVMSG)");
+		return 1;
+	}
+	// getting the rest of the message
+	getline(command, message);
+	// trimming the : from message
+	if(!message.empty() && message[0] == ' ')
+		message.erase(0, 1);
+	if (!message.empty() && message[0] == ':')
+		message = message.substr(1);
 
-	//need to check channel existence
-	//check if user exist
+	// No message to send error
+	if(message.empty())
+	{
+		reply(user, "", "412", "", ":No text to send");
+		return 1;
+	}
+	// finding the target (nickname or channel name)
+
+	//TODO if target is a channel, send channel message instead of message to target_fd
+
+	User *target_user = NULL;
+	for (std::vector<User *>::iterator it = _users.begin(); it != _users.end(); ++it)
+	{
+		if((*it)->get_nick() == target)
+		{
+			target_user = *it;
+			break;
+		}
+	}
+
+	// no target found error
+	if(!target_user)
+	{
+		reply(user, "", "401", target, ":No such nick/channel");
+		return 1;
+	}
+
+	// constructing the message
+	std::string privmsg = ":" + user->get_nick() + " PRIVMSG " + target + " :" + message + "\r\n";
+
+	// sending it
+	send(target_user->get_fd(), privmsg.c_str(), privmsg.length(), 0);
 	return (0);
 }
 
