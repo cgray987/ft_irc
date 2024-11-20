@@ -21,7 +21,7 @@ User::User(std::string nick, std::string user, std::string host) : _nick(nick), 
 }
 User::~User()
 {
-	std::cout << "user destructor: " << _user  << "on fd: " << this->get_fd() << "\n";
+	std::cout << "user destructor: " << _user  << " on fd: " << this->get_fd() << "\n";
 	if (_fd != -1)
 		close(_fd);
 }
@@ -38,6 +38,7 @@ bool	User::get_op(){return _op;}
 bool	User::get_reg(){return _registered;};
 
 
+void	User::set_host(std::string host) {_host = host;}
 void	User::set_fd(int fd) {_fd = fd;}
 void	User::set_auth(bool auth){_auth = auth;}
 void	User::set_op(bool op_status){_op = op_status;}
