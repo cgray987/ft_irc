@@ -6,7 +6,7 @@
 /*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/07 15:14:51 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/20 15:33:42 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/20 15:40:15 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -304,9 +304,6 @@ int Server::PRIVMSG(User *user, std::stringstream &command)
 		return 1;
 	}
 	// finding the target (nickname or channel name)
-
-	//TODO if target is a channel, send channel message instead of message to target_fd
-
 	User *target_user = NULL;
 	for (std::vector<User *>::iterator it = _users.begin(); it != _users.end(); ++it)
 	{
