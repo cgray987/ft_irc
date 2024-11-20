@@ -6,7 +6,7 @@
 /*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/07 15:14:51 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/20 15:40:15 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/20 17:00:39 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -304,18 +304,22 @@ int Server::PRIVMSG(User *user, std::stringstream &command)
 		return 1;
 	}
 	// finding the target (nickname or channel name)
+	Channel *target_channel = get_channel(target);
 	User *target_user = NULL;
-	for (std::vector<User *>::iterator it = _users.begin(); it != _users.end(); ++it)
+	if (!target_channel)
 	{
-		if((*it)->get_nick() == target)
+		for (std::vector<User *>::iterator it = _users.begin(); it != _users.end(); ++it)
 		{
-			target_user = *it;
-			break;
+			if((*it)->get_nick() == target)
+			{
+				target_user = *it;
+				break;
+			}
 		}
 	}
 
 	// no target found error
-	if(!target_user)
+	if(!target_user && !target_channel)
 	{
 		reply(user, "", "401", target, ":No such nick/channel");
 		return 1;
@@ -325,7 +329,16 @@ int Server::PRIVMSG(User *user, std::stringstream &command)
 	std::string privmsg = ":" + user->get_nick() + " PRIVMSG " + target + " :" + message + "\r\n";
 
 	// sending it
-	send(target_user->get_fd(), privmsg.c_str(), privmsg.length(), 0);
+	if (!target_channel)
+		send(target_user->get_fd(), privmsg.c_str(), privmsg.length(), 0);
+	else //sending to each member in the channel
+	{
+		for (std::set<User *>::iterator it = target_channel->get_members().begin(); it != target_channel->get_members().end(); ++it)
+		{
+			if (*it != user)
+				send((*it)->get_fd(), privmsg.c_str(), privmsg.length(), 0);
+		}
+	}
 	return (0);
 }
 
