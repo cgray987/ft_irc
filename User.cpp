@@ -1,21 +1,12 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   User.cpp                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: khlavaty <khlavaty@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/11/04 16:02:25 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/19 23:02:10 by khlavaty         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "User.hpp"
 
 User::User(){}
 User::User(const User &src) : _nick(src._nick), _user(src._user), _host(src._host){*this = src;}
 User &User::operator = (const User &src){return (*this);}
-User::User(std::string nick, std::string user, std::string host) : _nick(nick), _user(user), _host(host), _auth(false), _op(false)
+
+User::User(std::string nick, std::string user, std::string host):
+		_nick(nick), _user(user), _host(host),
+		_fd(-1), _auth(false), _op(false), _registered(false)
 {
 
 }
@@ -48,10 +39,6 @@ void	User::set_user(std::string user){_user = user;};
 void	User::set_realname(std::string realname){_realname = realname;};
 void	User::set_reg(bool reg){_registered = reg;};
 
-void	User::set_host(std::string host)
-{
-	_host = host;
-}
 // channels
 void User::join_channel(Channel* channel)
 {

@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   ServerCommands.cpp                                 :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/11/07 15:14:51 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/20 17:00:39 by cgray            ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "Server.hpp"
 
 #define VALID_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789[]{}\\|^`–-_"
@@ -30,13 +18,12 @@ int Server::CAP(User *user, std::stringstream &command)
 int Server::NICK(User *user, std::stringstream &command)
 {
 	std::string	nick;
-	bool		valid = true;
 
 	command >> nick;
 	if (nick.empty())
 	{
 		reply(user, "", "431", "", ":No nickname given"); //ERR_NONICKNAMEGIVEN
-		valid = false;
+		return 1;
 	}
 	else if (nick.length() > 30)
 		nick = nick.substr(0, 30);
@@ -69,7 +56,7 @@ int Server::NICK(User *user, std::stringstream &command)
 	{
 		register_client(user);
 	}
-
+	std::cout << "nick successful: " << user->get_nick() << "\n";
 	return (0);
 }
 
@@ -89,6 +76,7 @@ int Server::USER(User *user, std::stringstream &command)
 	// remove leading colon
 	if (!realname.empty() && realname[0] == ':')
 		realname = realname.substr(1);
+	user->set_realname(realname);
 
 	if (username.empty() || realname.empty())
 	{
@@ -110,7 +98,7 @@ int Server::USER(User *user, std::stringstream &command)
 	{
 		register_client(user);
 	}
-	// std::cout << "user registered as: " << user->get_user() << " with nick: " << user->get_nick() << "\n";
+	std::cout << "user registered as: " << user->get_user() << " with nick: " << user->get_nick() << "\n";
 	return 0;
 }
 
@@ -118,14 +106,13 @@ int Server::PASS(User *user, std::stringstream &command)
 {
 	std::string	password;
 	command >> password;
-	std::cout << "pass should be: " << Server::get_password() << "but is: " << password << "\n";
 	if (Server::get_password() != password)
 		Server::reply(user, "", "464", user->get_nick(), ":Password incorrect"); //ERR_PASSWDMISMATCH
 	else if (user->get_auth() == false)
 		user->set_auth(true);
 	else
 		Server::reply(user, "", "", user->get_nick(), ":User already authenticated."); //not standard irc error -- might need to be removed/changed to std error
-	// std::cout << "user authed? " << user->get_auth() << "\n";
+	std::cout << "PASS successful, auth: " << user->get_auth() << "\n";
 	return (0);
 }
 int Server::QUIT(User *user, std::stringstream &command)
@@ -212,7 +199,9 @@ int Server::TOPIC(User *user, std::stringstream &command)
 		for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
 			send((*it)->get_fd(), notify.c_str(), notify.length(), 0);
 	}
-
+	//:dan!d@localhost TOPIC #v3 :topic
+	reply(user, user->get_prefix(), "TOPIC", channel->get_name(), ":" + topic);
+	std::cout << "Topic in channel " << channel->get_name() << " changed to " << channel->get_topic() << "\n";
 	return (0);
 }
 
@@ -335,10 +324,11 @@ int Server::PRIVMSG(User *user, std::stringstream &command)
 	{
 		for (std::set<User *>::iterator it = target_channel->get_members().begin(); it != target_channel->get_members().end(); ++it)
 		{
-			if (*it != user)
+			if (*it != user) //send to everyone but yourself
 				send((*it)->get_fd(), privmsg.c_str(), privmsg.length(), 0);
 		}
 	}
+	std::cout << "PRIVMSG successful\n";
 	return (0);
 }
 
@@ -403,15 +393,15 @@ int Server::JOIN(User *user, std::stringstream &command)
 
 	reply (user, "", "353", "= " + name, members); // RPL_NAMREPLY
 	reply(user, "", "366", name, ":End of /NAMES list"); // RPL_ENDOFNAMES
+	std::cout << "user " << user->get_nick() << "added to channel " << channel->get_name() << "\n";
 	return 0;
 }
 
 // https://dd.ircdocs.horse/refs/commands/part
 int Server::PART(User *user, std::stringstream &command)
 {
-	std::string name;
+	std::string name, reason;
 	command >> name;
-
 	if (name.empty())
 	{
 		// ERR_NEEDMOREPARAMS
@@ -434,15 +424,19 @@ int Server::PART(User *user, std::stringstream &command)
 	channel->remove_member(user);
 	user->leave_channel(channel);
 
+	//get reason for parting
+	getline(command, reason);
 	// send PART message to users in channel
-	std::string part_msg = ":" + user->get_nick() + " PART " + name + "\r\n";
+	std::string part_msg = ":" + user->get_nick() + " PART " + name + reason +"\r\n";
 	for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
 		send((*it)->get_fd(), part_msg.c_str(), part_msg.length(), 0);
+	//:d!d@localhost PART #irctest :reason
+	reply(user, user->get_prefix(), "PART", channel->get_name(), reason);
+	std::cout << "user " << user->get_nick() << " removed from channel " << channel->get_name() << "\n";
 
 	// remove empty channel
 	if (channel->get_members().empty())
 		remove_channel(name);
-
 	return (0);
 }
 

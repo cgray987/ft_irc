@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Channel.hpp                                        :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: fvonsovs <fvonsovs@student.42prague.com    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/11/13 15:28:40 by fvonsovs          #+#    #+#             */
-/*   Updated: 2024/11/17 17:50:58 by fvonsovs         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #pragma once
 
 #include <string>
@@ -19,14 +7,14 @@
 
 class User;
 
-class Channel 
+class Channel
 {
 	private:
 		std::string _name;
 		std::string _topic;
 		std::set<User *> _members;
 		std::set<User *> _operators;
-		std::set<char> _modes; 
+		std::set<char> _modes;
 
 	public:
 		Channel();
