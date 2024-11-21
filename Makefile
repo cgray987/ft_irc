@@ -3,42 +3,55 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: cgray <cgray@student.42.fr>                +#+  +:+       +#+         #
+#    By: fvonsovs <fvonsovs@student.42prague.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/10 14:55:00 by cgray             #+#    #+#              #
-#    Updated: 2024/11/15 13:42:00 by cgray            ###   ########.fr        #
+#    Updated: 2024/11/21 15:03:06 by fvonsovs         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = ircserv
 
+DEBUG ?= 0
+
 CC = c++
-CFLAGS = -std=c++98 -g #-Wall -Werror -Wextra
+CXXFLAGS = -std=c++98 -g
 
-SRC = main.cpp Server.cpp User.cpp ServerCommands.cpp Channel.cpp
-OBJ = ${SRC:.cpp = .o}
+ifeq ($(DEBUG),1)
+    CPPFLAGS += -DDEBUG
+endif
 
-#Colors:
+SRC = main.cpp Server.cpp User.cpp ServerCommands.cpp Channel.cpp Log.cpp
+OBJ = $(SRC:.cpp=.o)
+
+# Colors:
 GREEN		=	\e[92;5;118m
 GRAY		=	\e[33;2;37m
 ITALIC		=	\e[33;3m
-RED			:=	\033[31m
-BCYAN		:=	\033[96m
-NC			:=	\033[0m
+RED			=	\033[31m
+BCYAN		=	\033[96m
+NC			=	\033[0m
 
 all: $(NAME)
 
 $(NAME): $(OBJ)
-	@echo "$(ITALIC) $(BCYAN)[ 🖩 Compiling $(NAME)... 🖩 ]$(NC)"
-	@ $(CC) $(CFLAGS) $(OBJ) -o $(NAME)
+	@echo "$(ITALIC) $(BCYAN)[ 🖩 Linking $(NAME)... 🖩 ]$(NC)"
+	@$(CC) $(OBJ) -o $(NAME)
 	@echo "$(ITALIC) $(GREEN)[ ❕$(NAME) ready❕ ]$(NC)"
 
+%.o: %.cpp
+	@echo "$(ITALIC) $(GRAY)[ Compiling $< ]$(NC)"
+	@$(CC) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+
 clean:
-	@rm -rf $(NAME)
-	@echo "$(RED) [ $(NAME) Removed. ]"
+	@rm -f $(OBJ)
+	@echo "$(RED) [ Object files removed. ]$(NC)"
 
-fclean:
-	@rm -rf $(NAME)
-	@echo "$(RED) [ $(NAME) Removed. ]"
+fclean: clean
+	@rm -f $(NAME)
+	@echo "$(RED) [ $(NAME) removed. ]$(NC)"
 
-re: clean all
+re: fclean all
+
+debug: 
+	$(MAKE) DEBUG=1 re
