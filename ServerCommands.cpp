@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   ServerCommands.cpp                                 :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/11/07 15:14:51 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/21 14:44:07 by cgray            ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "Server.hpp"
 
 #define VALID_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789[]{}\\|^`–-_"
@@ -212,7 +200,7 @@ int Server::TOPIC(User *user, std::stringstream &command)
 			send((*it)->get_fd(), notify.c_str(), notify.length(), 0);
 	}
 	//:dan!d@localhost TOPIC #v3 :topic
-	reply(user, user_id(user->get_nick(), user->get_user()), "TOPIC", channel->get_name(), ":" + topic);
+	reply(user, user->get_prefix(), "TOPIC", channel->get_name(), ":" + topic);
 	std::cout << "Topic in channel " << channel->get_name() << " changed to " << channel->get_topic() << "\n";
 	return (0);
 }
@@ -443,7 +431,7 @@ int Server::PART(User *user, std::stringstream &command)
 	for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
 		send((*it)->get_fd(), part_msg.c_str(), part_msg.length(), 0);
 	//:d!d@localhost PART #irctest :reason
-	reply(user, user_id(user->get_nick(), user->get_user()), "PART", channel->get_name(), reason);
+	reply(user, user->get_prefix(), "PART", channel->get_name(), reason);
 	std::cout << "user " << user->get_nick() << " removed from channel " << channel->get_name() << "\n";
 
 	// remove empty channel
