@@ -3,7 +3,7 @@
 // constructors
 Channel::Channel(): _name("unnammed channel") {}
 
-Channel::~Channel() {}
+Channel::~Channel() {std::cout << "Channel destructor for " << this->get_name() << "\n";}
 
 Channel::Channel(const std::string &name): _name(name) {}
 

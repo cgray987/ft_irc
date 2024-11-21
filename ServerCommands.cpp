@@ -43,7 +43,7 @@ int Server::NICK(User *user, std::stringstream &command)
 	// check is user already registered
 	if (user->get_reg())
 	{
-		std::string nick_msg = ":" + user->get_prefix() + " NICK :" + nick + "\r\n";
+		std::string nick_msg = ":" + user->get_prefix() + " NICK :" + nick + "\n";
 		// send msg to all users
 		for (std::vector<User *>::iterator it = _users.begin(); it != _users.end(); ++it)
 			send((*it)->get_fd(), nick_msg.c_str(), nick_msg.length(), 0);
@@ -195,7 +195,7 @@ int Server::TOPIC(User *user, std::stringstream &command)
 		channel->set_topic(topic);
 
 		// notify users
-		std::string notify = ":" + user->get_nick() + "TOPIC" + channel_name + " " + topic + "\r\n";
+		std::string notify = ":" + user->get_nick() + "TOPIC" + channel_name + " " + topic + "\n";
 		for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
 			send((*it)->get_fd(), notify.c_str(), notify.length(), 0);
 	}
@@ -253,7 +253,7 @@ int Server::MODE(User *user, std::stringstream &command)
 		}
 
 		// notify users
-		std::string notify = ":" + user->get_nick() + "MODE" + target + " " + modes + "\r\n";
+		std::string notify = ":" + user->get_nick() + "MODE" + target + " " + modes + "\n";
 		for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
 			send((*it)->get_fd(), notify.c_str(), notify.length(), 0);
 	}
@@ -315,7 +315,7 @@ int Server::PRIVMSG(User *user, std::stringstream &command)
 	}
 
 	// constructing the message
-	std::string privmsg = ":" + user->get_nick() + " PRIVMSG " + target + " :" + message + "\r\n";
+	std::string privmsg = ":" + user->get_nick() + " PRIVMSG " + target + " :" + message + "\n";
 
 	// sending it
 	if (!target_channel)
@@ -371,7 +371,7 @@ int Server::JOIN(User *user, std::stringstream &command)
 	user->join_channel(channel);
 
 	// send join message to the user and members of channel
-	std::string join_msg = ":" + user->get_nick() + " JOIN " + name + "\r\n";
+	std::string join_msg = ":" + user->get_nick() + " JOIN " + name + "\n";
 	send(user->get_fd(), join_msg.c_str(), join_msg.length(), 0);
 
 	for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
@@ -427,7 +427,7 @@ int Server::PART(User *user, std::stringstream &command)
 	//get reason for parting
 	getline(command, reason);
 	// send PART message to users in channel
-	std::string part_msg = ":" + user->get_nick() + " PART " + name + reason +"\r\n";
+	std::string part_msg = ":" + user->get_nick() + " PART " + name + reason +"\n";
 	for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
 		send((*it)->get_fd(), part_msg.c_str(), part_msg.length(), 0);
 	//:d!d@localhost PART #irctest :reason
