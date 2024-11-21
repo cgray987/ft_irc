@@ -6,7 +6,7 @@
 /*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/01 13:03:09 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/20 15:39:31 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/21 13:50:09 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -163,6 +163,7 @@ int	Server::client_message(User *user)
 	else if (bytes == 0)
 	{
 		std::cout << "client disconnected\n";
+		remove_user(user);
 		close(user->get_fd());
 		return (1);
 	}
@@ -230,7 +231,7 @@ void	Server::reply(User *user, std::string prefix, std::string command,
 	int	bytes_sent = send(user->get_fd(), reply.c_str(), reply.length(), 0);
 	if (bytes_sent <= 0) //TODO not sure what bytes sent==0 means, might be valid message
 		std::cout << RED << "Failed to send to FD:" << user->get_fd() << ":\t" << reply << "\n" << RST;
-	std::cout << CYN << "FD:" << user->get_fd() << ":\t" << reply << "\n" << RST;
+	std::cout << CYN << "FD:" << user->get_fd() << "\t" << reply << "\n" << RST;
 }
 
 void	Server::add_user(User *user)

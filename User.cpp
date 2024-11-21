@@ -6,7 +6,7 @@
 /*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/04 16:02:25 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/20 15:36:22 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/21 13:26:54 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,10 @@
 User::User(){}
 User::User(const User &src) : _nick(src._nick), _user(src._user), _host(src._host){*this = src;}
 User &User::operator = (const User &src){return (*this);}
-User::User(std::string nick, std::string user, std::string host) : _nick(nick), _user(user), _host(host), _auth(false), _op(false)
+
+User::User(std::string nick, std::string user, std::string host):
+		_nick(nick), _user(user), _host(host),
+		_fd(-1), _auth(false), _op(false), _registered(false)
 {
 
 }
