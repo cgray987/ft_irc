@@ -6,7 +6,7 @@
 /*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/07 15:14:51 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/21 13:55:47 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/21 14:44:07 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,6 +88,7 @@ int Server::USER(User *user, std::stringstream &command)
 	// remove leading colon
 	if (!realname.empty() && realname[0] == ':')
 		realname = realname.substr(1);
+	user->set_realname(realname);
 
 	if (username.empty() || realname.empty())
 	{
