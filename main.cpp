@@ -3,16 +3,23 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fvonsovs <fvonsovs@student.42prague.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/01 13:03:06 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/14 17:07:56 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/21 14:56:01 by fvonsovs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
+#include "Log.hpp"
+
 #include "signal.h"
 #include <cerrno>
+
+#ifdef DEBUG
+#warning "DEBUG is on"
+#endif
+
 
 bool	server_on = false;
 
@@ -41,6 +48,15 @@ int	main(int ac, char **av)
 {
 	if (arguments(ac, av))
 		return (1);
+
+	// for logging
+	#ifdef DEBUG
+    _logfile.open("server.log", std::ios_base::app);
+    if (!_logfile.is_open()) {
+        std::cerr << "Failed to open log file!" << std::endl;
+        return 1;
+    }
+	#endif
 
 	int			port = atoi(av[1]);
 	std::string	password = av[2];
@@ -74,6 +90,11 @@ int	main(int ac, char **av)
 					server.new_connection();
 				else if (server.client_message(user) == -1)
 				{
+					#ifdef DEBUG
+					LOG("Server shutting down.");
+					_logfile.close();
+					#endif
+					
 					server_on = false;
 				}
 			}
