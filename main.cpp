@@ -6,7 +6,7 @@
 /*   By: fvonsovs <fvonsovs@student.42prague.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/01 13:03:06 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/21 14:56:01 by fvonsovs         ###   ########.fr       */
+/*   Updated: 2024/11/21 15:05:02 by fvonsovs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,7 @@ int	main(int ac, char **av)
 
 	// for logging
 	#ifdef DEBUG
-    _logfile.open("server.log", std::ios_base::app);
+    _logfile.open("server.log", std::ios_base::trunc);
     if (!_logfile.is_open()) {
         std::cerr << "Failed to open log file!" << std::endl;
         return 1;

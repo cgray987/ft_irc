@@ -6,13 +6,13 @@
 #    By: fvonsovs <fvonsovs@student.42prague.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/10 14:55:00 by cgray             #+#    #+#              #
-#    Updated: 2024/11/21 14:45:22 by fvonsovs         ###   ########.fr        #
+#    Updated: 2024/11/21 15:03:06 by fvonsovs         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = ircserv
 
-DEBUG ?= 1
+DEBUG ?= 0
 
 CC = c++
 CXXFLAGS = -std=c++98 -g
@@ -53,5 +53,5 @@ fclean: clean
 
 re: fclean all
 
-debug: DEBUG=1
-debug: re
+debug: 
+	$(MAKE) DEBUG=1 re
