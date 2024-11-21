@@ -6,7 +6,7 @@
 /*   By: cgray <cgray@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/04 16:02:25 by cgray             #+#    #+#             */
-/*   Updated: 2024/11/21 14:13:15 by cgray            ###   ########.fr       */
+/*   Updated: 2024/11/21 14:41:26 by cgray            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,10 +51,6 @@ void	User::set_user(std::string user){_user = user;};
 void	User::set_realname(std::string realname){_realname = realname;};
 void	User::set_reg(bool reg){_registered = reg;};
 
-void	User::set_host(std::string host)
-{
-	_host = host;
-}
 // channels
 void User::join_channel(Channel* channel)
 {
