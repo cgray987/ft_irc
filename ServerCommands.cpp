@@ -264,7 +264,69 @@ int Server::MODE(User *user, std::stringstream &command)
 
 
 int Server::WHO(User *user, std::stringstream &command){return (0);}
-int Server::LIST(User *user, std::stringstream &command){return (0);}
+int Server::LIST(User *user, std::stringstream &command)
+{
+	std::string channel_name;
+	command >> channel_name;
+
+	if (channel_name.empty()) {
+		// if no specific channel requested, listing all channels
+		for (std::map<std::string, Channel *>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
+			Channel *channel = it->second;
+			std::stringstream ss;
+
+			// here i construct the message
+			std::string reply = ":localhost 322 " + user->get_nick() + " " + channel->get_name() + " ";
+			
+			ss << channel->get_members().size();
+			reply += ss.str() + " :";
+
+			if (!channel->get_topic().empty())
+				reply += channel->get_topic();
+			else
+				reply += "No topic";
+
+			reply += "\n";
+
+			// Send the RPL_LIST message (RPL means reply code btw)
+			send(user->get_fd(), reply.c_str(), reply.length(), 0);
+		}
+	} else {
+		// if specific channel requested
+		std::stringstream ss(channel_name);
+		std::string single_channel;
+
+		while (std::getline(ss, single_channel, ',')) {
+			Channel *channel = get_channel(single_channel);
+			if (channel) {
+				// Format the RPL_LIST reply
+				std::string reply = ":localhost 322 " + user->get_nick() + " " + channel->get_name() + " ";
+				ss << channel->get_members().size();
+				reply += ss.str() + " :";
+
+
+				if (!channel->get_topic().empty())
+					reply += channel->get_topic();
+				else
+					reply += "No topic";
+
+				reply += "\n";
+
+				// Send the RPL_LIST message
+				send(user->get_fd(), reply.c_str(), reply.length(), 0);
+			} else {
+				// if Channel not found
+				std::string error = ":localhost 403 " + user->get_nick() + " " + single_channel + " :No such channel\n";
+				send(user->get_fd(), error.c_str(), error.length(), 0);
+			}
+		}
+	}
+
+	// End the list with RPL_LISTEND
+	std::string list_end = ":localhost 323 " + user->get_nick() + " :End of /LIST\n";
+	send(user->get_fd(), list_end.c_str(), list_end.length(), 0);
+	return (0);
+}
 
 int Server::PRIVMSG(User *user, std::stringstream &command)
 {
