@@ -1,5 +1,5 @@
 #include "Server.hpp"
-
+#include <string>
 #define VALID_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789[]{}\\|^`–-_"
 
 
@@ -269,7 +269,8 @@ int Server::LIST(User *user, std::stringstream &command)
 	std::string channel_name;
 	command >> channel_name;
 
-	if (channel_name.empty()) {
+	if (channel_name.empty())
+	{
 		// if no specific channel requested, listing all channels
 		for (std::map<std::string, Channel *>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
 			Channel *channel = it->second;
@@ -287,18 +288,25 @@ int Server::LIST(User *user, std::stringstream &command)
 				reply += "No topic";
 
 			reply += "\n";
-
 			// Send the RPL_LIST message (RPL means reply code btw)
 			send(user->get_fd(), reply.c_str(), reply.length(), 0);
 		}
-	} else {
+	} else
+	{
 		// if specific channel requested
 		std::stringstream ss(channel_name);
 		std::string single_channel;
 
-		while (std::getline(ss, single_channel, ',')) {
+		while (std::getline(ss, single_channel, ','))
+		{
 			Channel *channel = get_channel(single_channel);
-			if (channel) {
+			if (channel)
+			{
+				// if the # is missing
+				// i think that this is a correct behaviour, but if not
+				// simply delete the if statement
+				if (single_channel[0] != '#')
+					single_channel = "#" + single_channel;
 				// Format the RPL_LIST reply
 				std::string reply = ":localhost 322 " + user->get_nick() + " " + channel->get_name() + " ";
 				ss << channel->get_members().size();
@@ -314,7 +322,8 @@ int Server::LIST(User *user, std::stringstream &command)
 
 				// Send the RPL_LIST message
 				send(user->get_fd(), reply.c_str(), reply.length(), 0);
-			} else {
+			} else
+			{
 				// if Channel not found
 				std::string error = ":localhost 403 " + user->get_nick() + " " + single_channel + " :No such channel\n";
 				send(user->get_fd(), error.c_str(), error.length(), 0);
