@@ -264,6 +264,15 @@ int Server::MODE(User *user, std::stringstream &command)
 
 
 int Server::WHO(User *user, std::stringstream &command){return (0);}
+
+// DELETE WITH COMMIT ?
+// so it seems like it works as it should, one small "issue" is that
+// if you are in the channel and write /list it looks lie it doesnt do anything
+// but it does, it prompted you to write -yes, but outside of the channel
+// so if you write /list -yes  it will print the channels outside the channel
+// so when you leave it will show the list
+// I believe that this is a expected behaviour, but we could output something
+// inside the channel if we wanted
 int Server::LIST(User *user, std::stringstream &command)
 {
 	std::string channel_name;
