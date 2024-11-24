@@ -139,7 +139,75 @@ int Server::KILL(User *user, std::stringstream &command)
 
 }
 int Server::OPER(User *user, std::stringstream &command){return (0);}
-int Server::KICK(User *user, std::stringstream &command){return (0);}
+
+int Server::KICK(User *user, std::stringstream &command)
+{
+	std::string channel_name, target_nick, comment;
+	command >> channel_name >> target_nick;
+	std::getline(command, comment);
+
+	// Checking for parameters
+	if (channel_name.empty() || target_nick.empty())
+	{
+		reply(user, "", "461", "KICK", ":Not enough parameters"); // ERR_NEEDMOREPARAMS
+		return 1;
+	}
+
+	// getting the channel
+	Channel *channel = get_channel(channel_name);
+	if (!channel)
+	{
+		reply(user, "", "403", channel_name, ":No such channel"); // ERR_NOSUCHCHANNEL
+		return 1;
+	}
+
+	// Checking if the user issuing the command is in the channel
+	if (!channel->is_member(user))
+	{
+		reply(user, "", "442", channel_name, ":You're not on that channel"); // ERR_NOTONCHANNEL
+		return 1;
+	}
+
+	// Checking if the user is a channel operator
+	if (!channel->is_operator(user)) 
+	{
+		reply(user, "", "482", channel_name, ":You're not a channel operator"); // ERR_CHANOPRIVSNEEDED
+		return 1;
+	}
+
+	// Find the target user
+	User *target = NULL;
+	for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
+	{
+		if ((*it)->get_nick() == target_nick)
+		{
+			target = *it;
+			break;
+		}
+	}
+
+	if (!target)
+	{
+		reply(user, "", "441", target_nick + " " + channel_name, ":They aren't on that channel"); // ERR_USERNOTINCHANNEL
+		return 1;
+	}
+
+	std::string kick_reason = comment.empty() ? "Kicked by operator" : comment;
+	std::stringstream part_command;
+	part_command << channel_name << " :" << kick_reason;
+	
+	PART(target, part_command);
+
+	// Notify all channel members about the kick
+	std::string kick_msg = ":" + user->get_prefix() + " KICK " + channel_name + " " + target_nick + " :" + kick_reason + "\n";
+	for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
+	{
+		send((*it)->get_fd(), kick_msg.c_str(), kick_msg.length(), 0);
+	}
+
+	std::cout << "User " << target->get_nick() << " was kicked from channel " << channel_name << "\n";
+	return (0);
+}
 int Server::PING(User *user, std::stringstream &command)
 {
 	reply(user, "", "PONG", "", "ft_irc");
