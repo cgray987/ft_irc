@@ -191,6 +191,12 @@ int Server::KICK(User *user, std::stringstream &command)
 		reply(user, "", "441", target_nick + " " + channel_name, ":They aren't on that channel"); // ERR_USERNOTINCHANNEL
 		return 1;
 	}
+	// cant kick yourself
+	if (target == user)
+	{
+		reply(user, "", "485", channel_name, ":You cannot kick yourself");
+		return 1;
+	}
 
 	std::string kick_reason = comment.empty() ? "Kicked by operator" : comment;
 	std::stringstream part_command;
