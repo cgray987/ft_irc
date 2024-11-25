@@ -1,5 +1,5 @@
 #include "Server.hpp"
-
+#include <string>
 #define VALID_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789[]{}\\|^`–-_"
 
 
@@ -139,7 +139,81 @@ int Server::KILL(User *user, std::stringstream &command)
 
 }
 int Server::OPER(User *user, std::stringstream &command){return (0);}
-int Server::KICK(User *user, std::stringstream &command){return (0);}
+
+int Server::KICK(User *user, std::stringstream &command)
+{
+	std::string channel_name, target_nick, comment;
+	command >> channel_name >> target_nick;
+	std::getline(command, comment);
+
+	// Checking for parameters
+	if (channel_name.empty() || target_nick.empty())
+	{
+		reply(user, "", "461", "KICK", ":Not enough parameters"); // ERR_NEEDMOREPARAMS
+		return 1;
+	}
+
+	// getting the channel
+	Channel *channel = get_channel(channel_name);
+	if (!channel)
+	{
+		reply(user, "", "403", channel_name, ":No such channel"); // ERR_NOSUCHCHANNEL
+		return 1;
+	}
+
+	// Checking if the user issuing the command is in the channel
+	if (!channel->is_member(user))
+	{
+		reply(user, "", "442", channel_name, ":You're not on that channel"); // ERR_NOTONCHANNEL
+		return 1;
+	}
+
+	// Checking if the user is a channel operator
+	if (!channel->is_operator(user)) 
+	{
+		reply(user, "", "482", channel_name, ":You're not a channel operator"); // ERR_CHANOPRIVSNEEDED
+		return 1;
+	}
+
+	// Find the target user
+	User *target = NULL;
+	for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
+	{
+		if ((*it)->get_nick() == target_nick)
+		{
+			target = *it;
+			break;
+		}
+	}
+
+	if (!target)
+	{
+		reply(user, "", "441", target_nick + " " + channel_name, ":They aren't on that channel"); // ERR_USERNOTINCHANNEL
+		return 1;
+	}
+	// cant kick yourself
+	if (target == user)
+	{
+		reply(user, "", "485", channel_name, ":You cannot kick yourself");
+		return 1;
+	}
+
+	std::string kick_reason = comment.empty() ? "Kicked by operator" : comment;
+	std::stringstream part_command;
+	part_command << channel_name << " :" << kick_reason;
+	
+	PART(target, part_command);
+
+	// Notify all channel members about the kick
+	std::string kick_msg = ":" + user->get_prefix() + " KICK " + channel_name + " " + target_nick + " :" + kick_reason + "\n";
+	for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
+	{
+		send((*it)->get_fd(), kick_msg.c_str(), kick_msg.length(), 0);
+	}
+
+	std::cout << "User " << target->get_nick() << " was kicked from channel " << channel_name << "\n";
+	return (0);
+}
 int Server::PING(User *user, std::stringstream &command)
 {
 	reply(user, "", "PONG", "", "ft_irc");
@@ -264,7 +338,87 @@ int Server::MODE(User *user, std::stringstream &command)
 
 
 int Server::WHO(User *user, std::stringstream &command){return (0);}
-int Server::LIST(User *user, std::stringstream &command){return (0);}
+
+// DELETE WITH COMMIT ?
+// so it seems like it works as it should, one small "issue" is that
+// if you are in the channel and write /list it looks lie it doesnt do anything
+// but it does, it prompted you to write -yes, but outside of the channel
+// so if you write /list -yes  it will print the channels outside the channel
+// so when you leave it will show the list
+// I believe that this is a expected behaviour, but we could output something
+// inside the channel if we wanted
+int Server::LIST(User *user, std::stringstream &command)
+{
+	std::string channel_name;
+	command >> channel_name;
+
+	if (channel_name.empty())
+	{
+		// if no specific channel requested, listing all channels
+		for (std::map<std::string, Channel *>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
+			Channel *channel = it->second;
+			std::stringstream ss;
+
+			// here i construct the message
+			std::string reply = ":localhost 322 " + user->get_nick() + " " + channel->get_name() + " ";
+			
+			ss << channel->get_members().size();
+			reply += ss.str() + " :";
+
+			if (!channel->get_topic().empty())
+				reply += channel->get_topic();
+			else
+				reply += "No topic";
+
+			reply += "\n";
+			// Send the RPL_LIST message (RPL means reply code btw)
+			send(user->get_fd(), reply.c_str(), reply.length(), 0);
+		}
+	} else
+	{
+		// if specific channel requested
+		std::stringstream ss(channel_name);
+		std::string single_channel;
+
+		while (std::getline(ss, single_channel, ','))
+		{
+			Channel *channel = get_channel(single_channel);
+			if (channel)
+			{
+				// if the # is missing
+				// i think that this is a correct behaviour, but if not
+				// simply delete the if statement
+				if (single_channel[0] != '#')
+					single_channel = "#" + single_channel;
+				// Format the RPL_LIST reply
+				std::string reply = ":localhost 322 " + user->get_nick() + " " + channel->get_name() + " ";
+				ss << channel->get_members().size();
+				reply += ss.str() + " :";
+
+
+				if (!channel->get_topic().empty())
+					reply += channel->get_topic();
+				else
+					reply += "No topic";
+
+				reply += "\n";
+
+				// Send the RPL_LIST message
+				send(user->get_fd(), reply.c_str(), reply.length(), 0);
+			} else
+			{
+				// if Channel not found
+				std::string error = ":localhost 403 " + user->get_nick() + " " + single_channel + " :No such channel\n";
+				send(user->get_fd(), error.c_str(), error.length(), 0);
+			}
+		}
+	}
+
+	// End the list with RPL_LISTEND
+	std::string list_end = ":localhost 323 " + user->get_nick() + " :End of /LIST\n";
+	send(user->get_fd(), list_end.c_str(), list_end.length(), 0);
+	return (0);
+}
 
 int Server::PRIVMSG(User *user, std::stringstream &command)
 {
