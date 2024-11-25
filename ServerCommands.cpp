@@ -221,11 +221,30 @@ int Server::KICK(User *user, std::stringstream &command)
 	std::cout << "User " << target->get_nick() << " was kicked from channel " << channel_name << "\n";
 	return (0);
 }
+
 int Server::PING(User *user, std::stringstream &command)
 {
-	reply(user, "", "PONG", "", "ft_irc");
+	std::string response;
+
+	std::getline(command, response);
+
+	// remove leading space or :
+	if (!response.empty() && response[0] == ' ')
+		response.erase(0, 1);
+
+	if (!response.empty() && response[0] == ':')
+		response.erase(0, 1);
+	
+	if (response.empty())
+	{
+		reply(user, "", "409", "", ":No origin specified"); // ERR_NOORIGIN
+		return 1;
+	}
+	// maybe need to include a prefix here 
+	reply(user, "", "PONG", "", response);
 	return (0);
 }
+
 int Server::INVITE(User *user, std::stringstream &command){return (0);}
 
 // https://dd.ircdocs.horse/refs/commands/topic

@@ -213,7 +213,7 @@ void	Server::reply(User *user, std::string prefix, std::string command,
 		reply += " " + target;
 	if (!message.empty())
 		reply += " :" + message;
-	reply += "\r\n"; // correct line ending
+	reply += "\n"; // correct line ending ? 
 
 	send (user->get_fd(), reply.c_str(), reply.length(), 0);
 	LOG("Sent reply to FD " << user->get_fd() << ": " << reply);
@@ -296,6 +296,7 @@ void Server::remove_channel(const std::string &name)
 		}
 
 		delete channel;
+		delete it->second;
 		_channels.erase(it);
 	}
 }
