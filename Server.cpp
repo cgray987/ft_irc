@@ -1,4 +1,5 @@
 #include "Server.hpp"
+#include "Log.hpp"
 
 Server::Server(){}
 Server::Server(const Server &src){*this = src;}
@@ -155,16 +156,19 @@ int	Server::client_message(User *user)
 		return (1);
 	}
 
+	LOG("Received raw message from FD: " << user->get_fd() << ": " << std::string(buf, bytes));
 	// std::cout << "\tbuf: " << buf;
 	_msg.append(buf);
 
 	// processing each commang in _msg
 	std::stringstream ss(_msg);
 	std::string line;
+	// LOG("Processing command: " + line + " from user " + user->get_user());
+
 	while(std::getline(ss, line, '\n'))
 	{
 		if(line.empty()) continue;
-		std::cout << "\tProcessing command: " << line << std::endl;
+		// std::cout << "\tProcessing command: " << line << std::endl;
 		get_command(user, line);
 	}
 	return 0;
@@ -182,7 +186,8 @@ int Server::get_command(User *user, std::string msg)
 	{
 		std::stringstream params;
 		params << ss.rdbuf(); // Get the remaining parameters
-		std::cout << "Calling command function for: " << word << " with params: " << RED << params.str() << std::endl << RST;
+		LOG("Calling command function for: " + word + " params: " + params.str());
+		// std::cout << "Calling command function for: " << word << " with params: " << RED << params.str() << std::endl << RST;
 		ret = (this->*(it->second))(user, params);
 		// clearing after processing the command
 		if (ret == 0)
@@ -202,29 +207,22 @@ void	Server::reply(User *user, std::string prefix, std::string command,
 {
 	std::string	reply;
 	if (!prefix.empty())
-		reply.append(prefix + " ");
-	else
-		reply.append("ft_irc ");
-	reply.append(command + " ");
+		reply += ":" + prefix + " ";
+	reply += command;
 	if (!target.empty())
-		reply.append(target);
-	else
-		reply.append(user->get_nick());
+		reply += " " + target;
 	if (!message.empty())
-		reply.append(" " + message);
-	if (reply.find_last_of("\n") == std::string::npos)
-		reply.append("\n");
+		reply += " :" + message;
+	reply += "\r\n"; // correct line ending
 
-	int	bytes_sent = send(user->get_fd(), reply.c_str(), reply.length(), 0);
-	if (bytes_sent <= 0) //TODO not sure what bytes sent==0 means, might be valid message
-		std::cout << RED << "Failed to send to FD:" << user->get_fd() << ":\t" << reply << "\n" << RST;
-	std::cout << CYN << "FD:" << user->get_fd() << "\t" << reply << "\n" << RST;
+	send (user->get_fd(), reply.c_str(), reply.length(), 0);
+	LOG("Sent reply to FD " << user->get_fd() << ": " << reply);
 }
 
 void	Server::add_user(User *user)
 {
 	_users.push_back(user);
-	register_client(user);
+	// register_client(user);
 }
 
 void	Server::remove_user(User *user)
@@ -236,12 +234,13 @@ void	Server::remove_user(User *user)
 
 void	Server::register_client(User *user)
 {
+	user->set_reg(true);
 	user->set_send_buf(RPL_WELCOME(user_id(user->get_nick(), user->get_user()), user->get_nick()));
 	user->set_send_buf(RPL_YOURHOST(user->get_nick(), "ft_irc", "v0.01"));
 	user->set_send_buf(RPL_CREATED(user->get_nick(), this->get_start_time()));
 	user->set_send_buf(RPL_MYINFO(user->get_nick(), "localhost", "0.01", "io", "kost", "k"));
 	user->set_send_buf(RPL_ISUPPORT(user->get_nick(), "CHANNELLEN=32 NICKLEN=9 TOPICLEN=307"));
-	user->set_reg(true);
+	LOG("Registered user: " + user->get_user() + "@" + user->get_host() + " known as " + user->get_nick());
 	Server::send_server_response(user, user->get_read_buf());
 }
 

@@ -9,6 +9,8 @@
 
 extern std::ofstream _logfile;
 
+void LOG(const std::string& message);
+
 #define LOG(msg) \
 	do { \
 		if (_logfile.is_open()) \
