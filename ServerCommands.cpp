@@ -1,4 +1,5 @@
 #include "Server.hpp"
+#include "Log.hpp"
 #include <string>
 #define VALID_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789[]{}\\|^`–-_"
 
@@ -52,11 +53,11 @@ int Server::NICK(User *user, std::stringstream &command)
 	user->set_nick(nick);
 
 	// if we have both USER and NICK set, and user is authenticated, register the client
-	if (!user->get_user().empty() && user->get_auth())
+	if (!user->get_reg() && !user->get_user().empty() && user->get_auth())
 	{
 		register_client(user);
 	}
-	std::cout << "nick successful: " << user->get_nick() << "\n";
+	// std::cout << "nick successful: " << user->get_nick() << "\n";
 	return (0);
 }
 
@@ -94,11 +95,11 @@ int Server::USER(User *user, std::stringstream &command)
 	user->set_realname(realname);
 
 	// if NICK and USER are set and user is authenticated, register the user
-	if (!user->get_nick().empty() && user->get_auth())
+	if (!user->get_reg() && !user->get_nick().empty() && user->get_auth())
 	{
 		register_client(user);
 	}
-	std::cout << "user registered as: " << user->get_user() << " with nick: " << user->get_nick() << "\n";
+	LOG("user registered as: " << user->get_user() << " with nick: " << user->get_nick());
 	return 0;
 }
 
@@ -112,7 +113,7 @@ int Server::PASS(User *user, std::stringstream &command)
 		user->set_auth(true);
 	else
 		Server::reply(user, "", "", user->get_nick(), ":User already authenticated."); //not standard irc error -- might need to be removed/changed to std error
-	std::cout << "PASS successful, auth: " << user->get_auth() << "\n";
+	// std::cout << "PASS successful, auth: " << user->get_auth() << "\n";
 	return (0);
 }
 int Server::QUIT(User *user, std::stringstream &command)
@@ -142,6 +143,12 @@ int Server::OPER(User *user, std::stringstream &command){return (0);}
 
 int Server::KICK(User *user, std::stringstream &command)
 {
+	if (user->get_reg() == false)
+	{
+		reply(user, "", "451", "", ":You have not registered");
+		return 1;
+	}
+
 	std::string channel_name, target_nick, comment;
 	command >> channel_name >> target_nick;
 	std::getline(command, comment);
@@ -224,6 +231,12 @@ int Server::INVITE(User *user, std::stringstream &command){return (0);}
 // https://dd.ircdocs.horse/refs/commands/topic
 int Server::TOPIC(User *user, std::stringstream &command)
 {
+	if (user->get_reg() == false)
+	{
+		reply(user, "", "451", "", ":You have not registered");
+		return 1;
+	}
+
 	std::string channel_name;
 	command >> channel_name;
 
@@ -281,6 +294,12 @@ int Server::TOPIC(User *user, std::stringstream &command)
 
 int Server::MODE(User *user, std::stringstream &command)
 {
+	if (user->get_reg() == false)
+	{
+		reply(user, "", "451", "", ":You have not registered");
+		return 1;
+	}
+
 	std::string target;
 	command >> target;
 
@@ -349,6 +368,12 @@ int Server::WHO(User *user, std::stringstream &command){return (0);}
 // inside the channel if we wanted
 int Server::LIST(User *user, std::stringstream &command)
 {
+	if (user->get_reg() == false)
+	{
+		reply(user, "", "451", "", ":You have not registered");
+		return 1;
+	}
+
 	std::string channel_name;
 	command >> channel_name;
 
@@ -422,6 +447,12 @@ int Server::LIST(User *user, std::stringstream &command)
 
 int Server::PRIVMSG(User *user, std::stringstream &command)
 {
+	if (user->get_reg() == false)
+	{
+		reply(user, "", "451", "", ":You have not registered");
+		return 1;
+	}
+
 	std::string target, message;
 	// getting the target (nickname or channel name)
 	command >> target;
@@ -482,7 +513,7 @@ int Server::PRIVMSG(User *user, std::stringstream &command)
 				send((*it)->get_fd(), privmsg.c_str(), privmsg.length(), 0);
 		}
 	}
-	std::cout << "PRIVMSG successful\n";
+	// std::cout << "PRIVMSG successful\n";
 	return (0);
 }
 
@@ -490,6 +521,12 @@ int Server::PRIVMSG(User *user, std::stringstream &command)
 // https://dd.ircdocs.horse/refs/commands/join
 int Server::JOIN(User *user, std::stringstream &command)
 {
+	if (user->get_reg() == false)
+	{
+		reply(user, "", "451", "", ":You have not registered");
+		return 1;
+	}
+
 	std::string name;
 	command >> name;
 
@@ -516,12 +553,6 @@ int Server::JOIN(User *user, std::stringstream &command)
 		return 0;
 
 	channel->add_member(user);
-	// added so i can remove a channel as a testuser
-	if (channel->get_operators().empty())
-	{
-		channel->add_operator(user);
-		std::cout << user->get_nick() << " has been made a channel operator for " << name << std::endl;
-	}
 	user->join_channel(channel);
 
 	// send join message to the user and members of channel
@@ -547,13 +578,19 @@ int Server::JOIN(User *user, std::stringstream &command)
 
 	reply (user, "", "353", "= " + name, members); // RPL_NAMREPLY
 	reply(user, "", "366", name, ":End of /NAMES list"); // RPL_ENDOFNAMES
-	std::cout << "user " << user->get_nick() << "added to channel " << channel->get_name() << "\n";
+	LOG("user " << user->get_nick() << "added to channel " << channel->get_name());
 	return 0;
 }
 
 // https://dd.ircdocs.horse/refs/commands/part
 int Server::PART(User *user, std::stringstream &command)
 {
+	if (user->get_reg() == false)
+	{
+		reply(user, "", "451", "", ":You have not registered");
+		return 1;
+	}
+
 	std::string name, reason;
 	command >> name;
 	if (name.empty())

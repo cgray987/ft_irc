@@ -21,13 +21,12 @@ int	User::get_fd() {return _fd;}
 std::string	User::get_nick(){return _nick;}
 std::string	User::get_user(){return _user;}
 std::string	User::get_realname(){return _realname;}
-
+std::string	User::get_host(){return _host;};
 std::string	User::get_read_buf(){return _read_buf;}
 std::string	User::get_prefix(){return (":" + _nick + "!" + _user + "@" + _host);}
 bool	User::get_auth(){return _auth;}
 bool	User::get_op(){return _op;}
 bool	User::get_reg(){return _registered;};
-
 
 void	User::set_host(std::string host) {_host = host;}
 void	User::set_fd(int fd) {_fd = fd;}
