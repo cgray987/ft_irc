@@ -19,3 +19,5 @@
 
 - server class channel creation and deletion
 - join command
+
+- ping response
