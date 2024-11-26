@@ -597,7 +597,7 @@ int Server::JOIN(User *user, std::stringstream &command)
 
 	reply (user, "", "353", "= " + name, members); // RPL_NAMREPLY
 	reply(user, "", "366", name, ":End of /NAMES list"); // RPL_ENDOFNAMES
-	LOG("user " << user->get_nick() << "added to channel " << channel->get_name());
+	LOG("User " << user->get_nick() << " added to channel " << channel->get_name());
 	return 0;
 }
 
@@ -641,8 +641,9 @@ int Server::PART(User *user, std::stringstream &command)
 	for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
 		send((*it)->get_fd(), part_msg.c_str(), part_msg.length(), 0);
 	//:d!d@localhost PART #irctest :reason
+	// LOG("Prefix: " << user->get_prefix());
 	reply(user, user->get_prefix(), "PART", channel->get_name(), reason);
-	std::cout << "user " << user->get_nick() << " removed from channel " << channel->get_name() << "\n";
+	LOG("User " << user->get_nick() << " removed from channel " << channel->get_name());
 
 	// remove empty channel
 	if (channel->get_members().empty())
