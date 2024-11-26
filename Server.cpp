@@ -205,7 +205,7 @@ int Server::get_command(User *user, std::string msg)
 void	Server::reply(User *user, std::string prefix, std::string command,
 						std::string target, std::string message)
 {
-	std::string	reply;
+/* 	std::string	reply;
 	if (!prefix.empty())
 		reply += ":" + prefix + " ";
 	reply += command;
@@ -213,9 +213,29 @@ void	Server::reply(User *user, std::string prefix, std::string command,
 		reply += " " + target;
 	if (!message.empty())
 		reply += " :" + message;
-	reply += "\n"; // correct line ending ? 
+	reply += "\n"; // correct line ending ? */
 
-	send (user->get_fd(), reply.c_str(), reply.length(), 0);
+		std::string	reply;
+	if (!prefix.empty())
+		reply.append(prefix + " ");
+	else
+		reply.append(":ft_irc ");
+	reply.append(command + " ");
+	if (!target.empty())
+		reply.append(target + " ");
+	else
+		reply.append(user->get_prefix());
+	if (!message.empty())
+		reply.append(":" + message);
+	else
+		reply.append(":");
+	if (reply.find_last_of("\n") == std::string::npos)
+		reply.append("\n");
+
+	int	bytes_sent = send(user->get_fd(), reply.c_str(), reply.length(), 0);
+	if (bytes_sent <= 0) //TODO not sure what bytes sent==0 means, might be valid message
+		LOG(RED << "Failed to send to FD:" << user->get_fd() << ":\t" << reply << "\n" << RST);
+
 	LOG("Sent reply to FD " << user->get_fd() << ": " << reply);
 }
 

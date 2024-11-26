@@ -12,7 +12,7 @@ User::User(std::string nick, std::string user, std::string host):
 }
 User::~User()
 {
-	std::cout << "user destructor: " << _user  << " on fd: " << this->get_fd() << "\n";
+	std::cout << "user destructor: " << this->get_prefix()  << " on fd: " << this->get_fd() << "\n";
 	if (_fd != -1)
 		close(_fd);
 }
@@ -23,7 +23,7 @@ std::string	User::get_user(){return _user;}
 std::string	User::get_realname(){return _realname;}
 std::string	User::get_host(){return _host;};
 std::string	User::get_read_buf(){return _read_buf;}
-std::string	User::get_prefix(){return (_nick + "!" + _user + "@" + _host);}
+std::string	User::get_prefix(){return (":" + _nick + "!" + _user + "@" + _host);}
 bool	User::get_auth(){return _auth;}
 bool	User::get_op(){return _op;}
 bool	User::get_reg(){return _registered;};

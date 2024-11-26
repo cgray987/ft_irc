@@ -23,14 +23,14 @@ int Server::NICK(User *user, std::stringstream &command)
 	command >> nick;
 	if (nick.empty())
 	{
-		reply(user, "", "431", "", ":No nickname given"); //ERR_NONICKNAMEGIVEN
+		reply(user, "", "431", "", "No nickname given"); //ERR_NONICKNAMEGIVEN
 		return 1;
 	}
 	else if (nick.length() > 30)
 		nick = nick.substr(0, 30);
 	else if (nick.find_first_not_of(VALID_CHARS) != nick.npos || isdigit(nick[0]))
 	{
-		reply(user, "", "432", "", ":Erroneus nickname"); //ERR_ERRONEUSNICKNAME
+		reply(user, "", "432", "", "Erroneus nickname"); //ERR_ERRONEUSNICKNAME
 		return 1;
 	}
 	// check for nick in use
@@ -38,7 +38,7 @@ int Server::NICK(User *user, std::stringstream &command)
 	{
 		if ((*it)->get_nick() == nick && (*it) != user)
 		{
-			reply(user, "", "433", nick, ":Nickname is already in use"); //ERR_NICKNAMEINUSE
+			reply(user, "", "433", nick, "Nickname is already in use"); //ERR_NICKNAMEINUSE
 		}
 	}
 	// check is user already registered
@@ -66,12 +66,11 @@ int Server::USER(User *user, std::stringstream &command)
 {
 	if (user->get_reg())
 	{
-		reply(user, "", "462", "", ":You may not reregister"); //ERR_NICKNAMEINUSE
+		reply(user, "", "462", "", "You may not reregister"); //ERR_NICKNAMEINUSE
 		return 1;
 	}
-
 	std::string username, hostname, servername, realname;
-	command >> username >> hostname >> servername;
+	command >> username >> username >> hostname >> servername;
 
 	getline(command, realname);
 	// remove leading colon
@@ -81,12 +80,12 @@ int Server::USER(User *user, std::stringstream &command)
 
 	if (username.empty() || realname.empty())
 	{
-		Server::reply(user, "", "461", "USER", ":Not enough parameters"); // ERR_NEEDMOREPARAMS
+		Server::reply(user, "", "461", "USER", "Not enough parameters"); // ERR_NEEDMOREPARAMS
 		return 1;
 	}
 	if (!user->get_auth() && !Server::get_password().empty())
 	{
-		Server::reply(user, "", "464", "", ":Password required"); // ERR_PASSWDMISMATCH
+		Server::reply(user, "", "464", "", "Password required"); // ERR_PASSWDMISMATCH
 		return 1;
 	}
 
@@ -108,11 +107,11 @@ int Server::PASS(User *user, std::stringstream &command)
 	std::string	password;
 	command >> password;
 	if (Server::get_password() != password)
-		Server::reply(user, "", "464", user->get_nick(), ":Password incorrect"); //ERR_PASSWDMISMATCH
+		Server::reply(user, "", "464", user->get_nick(), "Password incorrect"); //ERR_PASSWDMISMATCH
 	else if (user->get_auth() == false)
 		user->set_auth(true);
 	else
-		Server::reply(user, "", "", user->get_nick(), ":User already authenticated."); //not standard irc error -- might need to be removed/changed to std error
+		Server::reply(user, "", "", user->get_nick(), "User already authenticated."); //not standard irc error -- might need to be removed/changed to std error
 	// std::cout << "PASS successful, auth: " << user->get_auth() << "\n";
 	return (0);
 }
@@ -135,7 +134,7 @@ int Server::KILL(User *user, std::stringstream &command)
 		return (-1);
 	}
 	else
-		Server::reply(user, "", "", user->get_nick(), ":Need op privleges to kill server");
+		reply(user, "", "", user->get_nick(), "Need op privleges to kill server");
 	return (0);
 
 }
@@ -145,7 +144,7 @@ int Server::KICK(User *user, std::stringstream &command)
 {
 	if (user->get_reg() == false)
 	{
-		reply(user, "", "451", "", ":You have not registered");
+		reply(user, "", "451", "", "You have not registered");
 		return 1;
 	}
 
@@ -156,7 +155,7 @@ int Server::KICK(User *user, std::stringstream &command)
 	// Checking for parameters
 	if (channel_name.empty() || target_nick.empty())
 	{
-		reply(user, "", "461", "KICK", ":Not enough parameters"); // ERR_NEEDMOREPARAMS
+		reply(user, "", "461", "KICK", "Not enough parameters"); // ERR_NEEDMOREPARAMS
 		return 1;
 	}
 
@@ -164,21 +163,21 @@ int Server::KICK(User *user, std::stringstream &command)
 	Channel *channel = get_channel(channel_name);
 	if (!channel)
 	{
-		reply(user, "", "403", channel_name, ":No such channel"); // ERR_NOSUCHCHANNEL
+		reply(user, "", "403", channel_name, "No such channel"); // ERR_NOSUCHCHANNEL
 		return 1;
 	}
 
 	// Checking if the user issuing the command is in the channel
 	if (!channel->is_member(user))
 	{
-		reply(user, "", "442", channel_name, ":You're not on that channel"); // ERR_NOTONCHANNEL
+		reply(user, "", "442", channel_name, "You're not on that channel"); // ERR_NOTONCHANNEL
 		return 1;
 	}
 
 	// Checking if the user is a channel operator
-	if (!channel->is_operator(user)) 
+	if (!channel->is_operator(user))
 	{
-		reply(user, "", "482", channel_name, ":You're not a channel operator"); // ERR_CHANOPRIVSNEEDED
+		reply(user, "", "482", channel_name, "You're not a channel operator"); // ERR_CHANOPRIVSNEEDED
 		return 1;
 	}
 
@@ -195,20 +194,20 @@ int Server::KICK(User *user, std::stringstream &command)
 
 	if (!target)
 	{
-		reply(user, "", "441", target_nick + " " + channel_name, ":They aren't on that channel"); // ERR_USERNOTINCHANNEL
+		reply(user, "", "441", target_nick + " " + channel_name, "They aren't on that channel"); // ERR_USERNOTINCHANNEL
 		return 1;
 	}
 	// cant kick yourself
 	if (target == user)
 	{
-		reply(user, "", "485", channel_name, ":You cannot kick yourself");
+		reply(user, "", "485", channel_name, "You cannot kick yourself");
 		return 1;
 	}
 
 	std::string kick_reason = comment.empty() ? "Kicked by operator" : comment;
 	std::stringstream part_command;
 	part_command << channel_name << " :" << kick_reason;
-	
+
 	PART(target, part_command);
 
 	// Notify all channel members about the kick
@@ -234,13 +233,13 @@ int Server::PING(User *user, std::stringstream &command)
 
 	if (!response.empty() && response[0] == ':')
 		response.erase(0, 1);
-	
+
 	if (response.empty())
 	{
-		reply(user, "", "409", "", ":No origin specified"); // ERR_NOORIGIN
+		reply(user, "", "409", "", "No origin specified"); // ERR_NOORIGIN
 		return 1;
 	}
-	// maybe need to include a prefix here 
+	// maybe need to include a prefix here
 	reply(user, "", "PONG", "", response);
 	return (0);
 }
@@ -252,7 +251,7 @@ int Server::TOPIC(User *user, std::stringstream &command)
 {
 	if (user->get_reg() == false)
 	{
-		reply(user, "", "451", "", ":You have not registered");
+		reply(user, "", "451", "", "You have not registered");
 		return 1;
 	}
 
@@ -261,52 +260,58 @@ int Server::TOPIC(User *user, std::stringstream &command)
 
 	if (channel_name.empty())
 	{
-		reply(user, "", "461", "TOPIC", ":Not enough parameters");
+		reply(user, "", "461", "TOPIC", "Not enough parameters");
 		return 1;
 	}
 
 	Channel *channel = get_channel(channel_name);
 	if (!channel)
 	{
-		reply(user, "", "403", channel_name, ":No such channel");
+		reply(user, "", "403", channel_name, "No such channel");
 		return 1;
 	}
 
 	if (!channel->is_member(user))
 	{
-		reply(user, "", "442", channel_name, ":You're not on that channel");
+		reply(user, "", "442", channel_name, "You're not on that channel");
 		return 1;
 	}
 
 	std::string topic;
 	getline(command, topic);
 
+	size_t pos = topic.find_first_not_of(" \t\n\r\f\v");
+	if (pos != std::string::npos && topic[pos] == ':')
+		topic.erase(0, pos + 1);
+
 	if (topic.empty())
 	{
 		// if without topic parameter, sends the current topic
 		if (!channel->get_topic().empty())
-			reply(user, "", "332", channel_name, ":" + channel->get_topic());
+			reply(user, "", "332", channel_name, channel->get_topic());
 		else
-			reply(user, "", "331", channel_name, ":No topic is set");
+			reply(user, "", "331", channel_name, "No topic is set");
 	}
 	else
 	{
 		// check if mode is topic settable by operator only
 		if (channel->get_mode('t') && !channel->is_operator(user))
 		{
-			reply(user, "", "482", channel_name, ":You're not a channel operator");
+			reply(user, "", "482", channel_name, "You're not a channel operator");
 			return 1;
 		}
-
 		channel->set_topic(topic);
 
 		// notify users
 		std::string notify = ":" + user->get_nick() + "TOPIC" + channel_name + " " + topic + "\n";
 		for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
-			send((*it)->get_fd(), notify.c_str(), notify.length(), 0);
+			if ((*it) != user)
+				reply((*it), user->get_prefix(), "TOPIC", channel->get_name(), topic);
+			// send((*it)->get_fd(), notify.c_str(), notify.length(), 0);
 	}
+
 	//:dan!d@localhost TOPIC #v3 :topic
-	reply(user, user->get_prefix(), "TOPIC", channel->get_name(), ":" + topic);
+	reply(user, user->get_prefix(), "TOPIC", channel->get_name(), topic);
 	std::cout << "Topic in channel " << channel->get_name() << " changed to " << channel->get_topic() << "\n";
 	return (0);
 }
@@ -315,7 +320,7 @@ int Server::MODE(User *user, std::stringstream &command)
 {
 	if (user->get_reg() == false)
 	{
-		reply(user, "", "451", "", ":You have not registered");
+		reply(user, "", "451", "", "You have not registered");
 		return 1;
 	}
 
@@ -324,7 +329,7 @@ int Server::MODE(User *user, std::stringstream &command)
 
 	if (target.empty())
 	{
-		reply(user, "", "461", "MODE", ":Not enough parameters");
+		reply(user, "", "461", "MODE", "Not enough parameters");
 		return 1;
 	}
 
@@ -333,12 +338,12 @@ int Server::MODE(User *user, std::stringstream &command)
 		Channel *channel = get_channel(target);
 		if (!channel)
 		{
-			reply(user, "", "403", target, ":No such channel");
+			reply(user, "", "403", target, "No such channel");
 			return 1;
 		}
 		if (!channel->is_operator(user))
 		{
-			reply(user, "", "482", target, ":You're not a channel operator");
+			reply(user, "", "482", target, "You're not a channel operator");
 			return 1;
 		}
 
@@ -389,7 +394,7 @@ int Server::LIST(User *user, std::stringstream &command)
 {
 	if (user->get_reg() == false)
 	{
-		reply(user, "", "451", "", ":You have not registered");
+		reply(user, "", "451", "", "You have not registered");
 		return 1;
 	}
 
@@ -405,7 +410,7 @@ int Server::LIST(User *user, std::stringstream &command)
 
 			// here i construct the message
 			std::string reply = ":localhost 322 " + user->get_nick() + " " + channel->get_name() + " ";
-			
+
 			ss << channel->get_members().size();
 			reply += ss.str() + " :";
 
@@ -468,7 +473,7 @@ int Server::PRIVMSG(User *user, std::stringstream &command)
 {
 	if (user->get_reg() == false)
 	{
-		reply(user, "", "451", "", ":You have not registered");
+		reply(user, "", "451", "", "You have not registered");
 		return 1;
 	}
 
@@ -479,7 +484,7 @@ int Server::PRIVMSG(User *user, std::stringstream &command)
 	// no recipient error
 	if(target.empty())
 	{
-		reply(user, "", "411", "", ":No recipient given (PRIVMSG)");
+		reply(user, "", "411", "", "No recipient given (PRIVMSG)");
 		return 1;
 	}
 	// getting the rest of the message
@@ -493,7 +498,7 @@ int Server::PRIVMSG(User *user, std::stringstream &command)
 	// No message to send error
 	if(message.empty())
 	{
-		reply(user, "", "412", "", ":No text to send");
+		reply(user, "", "412", "", "No text to send");
 		return 1;
 	}
 	// finding the target (nickname or channel name)
@@ -514,7 +519,7 @@ int Server::PRIVMSG(User *user, std::stringstream &command)
 	// no target found error
 	if(!target_user && !target_channel)
 	{
-		reply(user, "", "401", target, ":No such nick/channel");
+		reply(user, "", "401", target, "No such nick/channel");
 		return 1;
 	}
 
@@ -542,7 +547,7 @@ int Server::JOIN(User *user, std::stringstream &command)
 {
 	if (user->get_reg() == false)
 	{
-		reply(user, "", "451", "", ":You have not registered");
+		reply(user, "", "451", "", "You have not registered");
 		return 1;
 	}
 
@@ -552,7 +557,7 @@ int Server::JOIN(User *user, std::stringstream &command)
 	if (name.empty())
 	{
 		// ERR_NEEDMOREPARAMS
-		reply(user, "", "461", "JOIN", ":Not enough parameters");
+		reply(user, "", "461", "JOIN", "Not enough parameters");
 		return 1;
 	}
 
@@ -586,17 +591,20 @@ int Server::JOIN(User *user, std::stringstream &command)
 
 	// send channel topic
 	if (!channel->get_topic().empty())
-		reply(user, "", "332", name, ":" + channel->get_topic()); // RPL_TOPIC
+		reply(user, "", "332", name, channel->get_topic()); // RPL_TOPIC
 	else
-		reply(user, "", "331", name, ":No topic set"); // RPL_NOTOPIC
+		reply(user, "", "331", name, "No topic set"); // RPL_NOTOPIC
 
 	// send users in channel
 	std::string members;
 	for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
-		members = members + (*it)->get_nick() + " ";
+	{
+		if ((*it) != user)
+			members = members + (*it)->get_nick() + " ";
+	}
 
-	reply (user, "", "353", "= " + name, members); // RPL_NAMREPLY
-	reply(user, "", "366", name, ":End of /NAMES list"); // RPL_ENDOFNAMES
+	reply(user, "", "353", "= " + name, members); // RPL_NAMREPLY
+	reply(user, "", "366", name, "End of NAMES list"); // RPL_ENDOFNAMES
 	LOG("User " << user->get_nick() << " added to channel " << channel->get_name());
 	return 0;
 }
@@ -606,7 +614,7 @@ int Server::PART(User *user, std::stringstream &command)
 {
 	if (user->get_reg() == false)
 	{
-		reply(user, "", "451", "", ":You have not registered");
+		reply(user, "", "451", "", "You have not registered");
 		return 1;
 	}
 
@@ -615,19 +623,19 @@ int Server::PART(User *user, std::stringstream &command)
 	if (name.empty())
 	{
 		// ERR_NEEDMOREPARAMS
-		reply(user, "", "461", "PART", ":Not enough parameters");
+		reply(user, "", "461", "PART", "Not enough parameters");
 		return 1;
 	}
 
 	Channel *channel = get_channel(name);
 	if (!channel)
 	{
-		reply(user, "", "403", name, ":No such channel"); // ERR_NOSUCHCHANNEL
+		reply(user, "", "403", name, "No such channel"); // ERR_NOSUCHCHANNEL
 		return 1;
 	}
 	if (!channel->is_member(user))
 	{
-		reply(user, "", "442", name, ":You're not on that channel"); // ERR_NOTONCHANNEL
+		reply(user, "", "442", name, "You're not on that channel"); // ERR_NOTONCHANNEL
 		return 1;
 	}
 
@@ -639,11 +647,12 @@ int Server::PART(User *user, std::stringstream &command)
 	// send PART message to users in channel
 	std::string part_msg = ":" + user->get_nick() + " PART " + name + reason +"\n";
 	for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
-		send((*it)->get_fd(), part_msg.c_str(), part_msg.length(), 0);
+		reply((*it), user->get_prefix(), "PART", channel->get_name(), reason);
+		// send((*it)->get_fd(), part_msg.c_str(), part_msg.length(), 0);
 	//:d!d@localhost PART #irctest :reason
 	// LOG("Prefix: " << user->get_prefix());
 	reply(user, user->get_prefix(), "PART", channel->get_name(), reason);
-	LOG("User " << user->get_nick() << " removed from channel " << channel->get_name());
+	// LOG("User " << user->get_nick() << " removed from channel " << channel->get_name());
 
 	// remove empty channel
 	if (channel->get_members().empty())
@@ -659,20 +668,20 @@ int Server::REMOVE_CHANNEL(User *user, std::stringstream &command)
 	if (channel_name.empty())
 	{
 		// ERR_NEEDMOREPARAMS
-		reply(user, "", "461", "REMOVE_CHANNEL", ":Not enough parameters");
+		reply(user, "", "461", "REMOVE_CHANNEL", "Not enough parameters");
 		return 1;
 	}
 
 	Channel *channel = get_channel(channel_name);
 	if(!channel)
 	{
-		reply(user, "", "403", channel_name, ":No such channel");// ERR_NOSUCHCHANNEL
+		reply(user, "", "403", channel_name, "No such channel");// ERR_NOSUCHCHANNEL
 		return 1;
 	}
 	if(!channel->is_operator(user))
 	{
 		// its from here if you were wondering :D https://datatracker.ietf.org/doc/html/rfc2812
-		reply(user, "", "482", channel_name, ":You're not a channel operator"); // ERR_CHANOPRIVSNEEDED
+		reply(user, "", "482", channel_name, "You're not a channel operator"); // ERR_CHANOPRIVSNEEDED
 		return 1;
 	}
 
