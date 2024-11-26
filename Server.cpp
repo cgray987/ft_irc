@@ -205,17 +205,17 @@ int Server::get_command(User *user, std::string msg)
 void	Server::reply(User *user, std::string prefix, std::string command,
 						std::string target, std::string message)
 {
-/* 	std::string	reply;
-	if (!prefix.empty())
-		reply += ":" + prefix + " ";
-	reply += command;
-	if (!target.empty())
-		reply += " " + target;
-	if (!message.empty())
-		reply += " :" + message;
-	reply += "\n"; // correct line ending ? */
+	// std::string	reply;
+	// if (!prefix.empty())
+	// 	reply += ":" + prefix + " ";
+	// reply += command;
+	// if (!target.empty())
+	// 	reply += " " + target;
+	// if (!message.empty())
+	// 	reply += " :" + message;
+	// reply += "\n"; // correct line ending ?
 
-		std::string	reply;
+	std::string	reply;
 	if (!prefix.empty())
 		reply.append(prefix + " ");
 	else
@@ -258,7 +258,7 @@ void	Server::register_client(User *user)
 	user->set_send_buf(RPL_WELCOME(user_id(user->get_nick(), user->get_user()), user->get_nick()));
 	user->set_send_buf(RPL_YOURHOST(user->get_nick(), "ft_irc", "v0.01"));
 	user->set_send_buf(RPL_CREATED(user->get_nick(), this->get_start_time()));
-	user->set_send_buf(RPL_MYINFO(user->get_nick(), "localhost", "0.01", "io", "kost", "k"));
+	user->set_send_buf(RPL_MYINFO(user->get_nick(), "ft_irc", "0.01", "io", "kost", "k"));
 	user->set_send_buf(RPL_ISUPPORT(user->get_nick(), "CHANNELLEN=32 NICKLEN=9 TOPICLEN=307"));
 	LOG("Registered user: " + user->get_user() + "@" + user->get_host() + " known as " + user->get_nick());
 	Server::send_server_response(user, user->get_read_buf());

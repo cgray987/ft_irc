@@ -47,7 +47,8 @@ int Server::NICK(User *user, std::stringstream &command)
 		std::string nick_msg = ":" + user->get_prefix() + " NICK :" + nick + "\n";
 		// send msg to all users
 		for (std::vector<User *>::iterator it = _users.begin(); it != _users.end(); ++it)
-			send((*it)->get_fd(), nick_msg.c_str(), nick_msg.length(), 0);
+			reply((*it), user->get_prefix(), "NICK", nick, "");
+			// send((*it)->get_fd(), nick_msg.c_str(), nick_msg.length(), 0);
 	}
 
 	user->set_nick(nick);
@@ -214,7 +215,8 @@ int Server::KICK(User *user, std::stringstream &command)
 	std::string kick_msg = ":" + user->get_prefix() + " KICK " + channel_name + " " + target_nick + " :" + kick_reason + "\n";
 	for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
 	{
-		send((*it)->get_fd(), kick_msg.c_str(), kick_msg.length(), 0);
+		reply((*it), user->get_prefix(), "KICK" + channel_name, target_nick, kick_reason); //might be server prefix
+		// send((*it)->get_fd(), kick_msg.c_str(), kick_msg.length(), 0);
 	}
 
 	std::cout << "User " << target->get_nick() << " was kicked from channel " << channel_name << "\n";
@@ -305,13 +307,12 @@ int Server::TOPIC(User *user, std::stringstream &command)
 		// notify users
 		std::string notify = ":" + user->get_nick() + "TOPIC" + channel_name + " " + topic + "\n";
 		for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
-			if ((*it) != user)
-				reply((*it), user->get_prefix(), "TOPIC", channel->get_name(), topic);
+			reply((*it), user->get_prefix(), "TOPIC", channel->get_name(), topic);
 			// send((*it)->get_fd(), notify.c_str(), notify.length(), 0);
 	}
 
 	//:dan!d@localhost TOPIC #v3 :topic
-	reply(user, user->get_prefix(), "TOPIC", channel->get_name(), topic);
+	// reply(user, user->get_prefix(), "TOPIC", channel->get_name(), ":" + topic);
 	std::cout << "Topic in channel " << channel->get_name() << " changed to " << channel->get_topic() << "\n";
 	return (0);
 }
@@ -372,7 +373,8 @@ int Server::MODE(User *user, std::stringstream &command)
 		// notify users
 		std::string notify = ":" + user->get_nick() + "MODE" + target + " " + modes + "\n";
 		for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
-			send((*it)->get_fd(), notify.c_str(), notify.length(), 0);
+			reply((*it), user->get_prefix(), "MODE", target, modes);
+			// send((*it)->get_fd(), notify.c_str(), notify.length(), 0);
 	}
 	// handle unknown flags here?
 
@@ -409,19 +411,20 @@ int Server::LIST(User *user, std::stringstream &command)
 			std::stringstream ss;
 
 			// here i construct the message
-			std::string reply = ":localhost 322 " + user->get_nick() + " " + channel->get_name() + " ";
+			// std::string reply = ":localhost 322 " + user->get_nick() + " " + channel->get_name() + " ";
 
-			ss << channel->get_members().size();
-			reply += ss.str() + " :";
+			// ss << channel->get_members().size();
+			// reply += ss.str() + " :";
 
-			if (!channel->get_topic().empty())
-				reply += channel->get_topic();
-			else
-				reply += "No topic";
+			// if (!channel->get_topic().empty())
+			// 	reply += channel->get_topic();
+			// else
+			// 	reply += "No topic";
 
-			reply += "\n";
+			// reply += "\n";
 			// Send the RPL_LIST message (RPL means reply code btw)
-			send(user->get_fd(), reply.c_str(), reply.length(), 0);
+			reply(user, "", "322", channel->get_name(), channel->get_topic());
+			// send(user->get_fd(), reply.c_str(), reply.length(), 0);
 		}
 	} else
 	{
@@ -440,32 +443,35 @@ int Server::LIST(User *user, std::stringstream &command)
 				if (single_channel[0] != '#')
 					single_channel = "#" + single_channel;
 				// Format the RPL_LIST reply
-				std::string reply = ":localhost 322 " + user->get_nick() + " " + channel->get_name() + " ";
-				ss << channel->get_members().size();
-				reply += ss.str() + " :";
+				// std::string reply = ":localhost 322 " + user->get_nick() + " " + channel->get_name() + " ";
+				// ss << channel->get_members().size();
+				// reply += ss.str() + " :";
 
 
-				if (!channel->get_topic().empty())
-					reply += channel->get_topic();
-				else
-					reply += "No topic";
+				// if (!channel->get_topic().empty())
+				// 	reply += channel->get_topic();
+				// else
+				// 	reply += "No topic";
 
-				reply += "\n";
+				// reply += "\n";
 
 				// Send the RPL_LIST message
-				send(user->get_fd(), reply.c_str(), reply.length(), 0);
+				// send(user->get_fd(), reply.c_str(), reply.length(), 0);
+				reply(user, "", "322", channel->get_name(), channel->get_topic());
 			} else
 			{
 				// if Channel not found
 				std::string error = ":localhost 403 " + user->get_nick() + " " + single_channel + " :No such channel\n";
-				send(user->get_fd(), error.c_str(), error.length(), 0);
+				reply(user, "", "403", single_channel, "No such channel");
+				// send(user->get_fd(), error.c_str(), error.length(), 0);
 			}
 		}
 	}
 
 	// End the list with RPL_LISTEND
 	std::string list_end = ":localhost 323 " + user->get_nick() + " :End of /LIST\n";
-	send(user->get_fd(), list_end.c_str(), list_end.length(), 0);
+	reply(user, "", "323", "", "End of LIST");
+	// send(user->get_fd(), list_end.c_str(), list_end.length(), 0);
 	return (0);
 }
 
@@ -528,13 +534,15 @@ int Server::PRIVMSG(User *user, std::stringstream &command)
 
 	// sending it
 	if (!target_channel)
-		send(target_user->get_fd(), privmsg.c_str(), privmsg.length(), 0);
+		reply(target_user, user->get_prefix(), "PRIVMSG", target, message);
+		// send(target_user->get_fd(), privmsg.c_str(), privmsg.length(), 0);
 	else //sending to each member in the channel
 	{
 		for (std::set<User *>::iterator it = target_channel->get_members().begin(); it != target_channel->get_members().end(); ++it)
 		{
 			if (*it != user) //send to everyone but yourself
-				send((*it)->get_fd(), privmsg.c_str(), privmsg.length(), 0);
+				reply((*it), user->get_prefix(), "PRIVMSG", target_channel->get_name(), message);
+				// send((*it)->get_fd(), privmsg.c_str(), privmsg.length(), 0);
 		}
 	}
 	// std::cout << "PRIVMSG successful\n";
@@ -581,12 +589,14 @@ int Server::JOIN(User *user, std::stringstream &command)
 
 	// send join message to the user and members of channel
 	std::string join_msg = ":" + user->get_nick() + " JOIN " + name + "\n";
-	send(user->get_fd(), join_msg.c_str(), join_msg.length(), 0);
+	reply(user, user->get_prefix(), "JOIN", name, "");
+	// send(user->get_fd(), join_msg.c_str(), join_msg.length(), 0);
 
 	for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
 	{
 		if (*it != user)
-			send((*it)->get_fd(), join_msg.c_str(), join_msg.length(), 0);
+			reply((*it), user->get_prefix(), "JOIN", name, "");
+			// send((*it)->get_fd(), join_msg.c_str(), join_msg.length(), 0);
 	}
 
 	// send channel topic
@@ -599,12 +609,11 @@ int Server::JOIN(User *user, std::stringstream &command)
 	std::string members;
 	for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
 	{
-		if ((*it) != user)
-			members = members + (*it)->get_nick() + " ";
+		members = members + (*it)->get_nick() + " ";
 	}
 
-	reply(user, "", "353", "= " + name, members); // RPL_NAMREPLY
-	reply(user, "", "366", name, "End of NAMES list"); // RPL_ENDOFNAMES
+	reply(user, "", "353", user->get_nick() + "= " + name , members); // RPL_NAMREPLY
+	reply(user, "", "366", user->get_nick() + " " + name, "End of NAMES list"); // RPL_ENDOFNAMES
 	LOG("User " << user->get_nick() << " added to channel " << channel->get_name());
 	return 0;
 }
@@ -639,21 +648,28 @@ int Server::PART(User *user, std::stringstream &command)
 		return 1;
 	}
 
-	channel->remove_member(user);
-	user->leave_channel(channel);
 
 	//get reason for parting
 	getline(command, reason);
+
+	if (reason.empty())
+		reason = "leaving";
+
 	// send PART message to users in channel
+	reply(user, user->get_prefix(), "PART", channel->get_name(), reason);
 	std::string part_msg = ":" + user->get_nick() + " PART " + name + reason +"\n";
 	for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
-		reply((*it), user->get_prefix(), "PART", channel->get_name(), reason);
+		if ((*it) != user)
+			reply((*it), user->get_prefix(), "PART", channel->get_name(), reason);
 		// send((*it)->get_fd(), part_msg.c_str(), part_msg.length(), 0);
 	//:d!d@localhost PART #irctest :reason
+	// reply(user, user->get_prefix(), "PART", channel->get_name(), reason);
+	std::cout << "user " << user->get_nick() << " removed from channel " << channel->get_name() << "\n";
 	// LOG("Prefix: " << user->get_prefix());
-	reply(user, user->get_prefix(), "PART", channel->get_name(), reason);
 	// LOG("User " << user->get_nick() << " removed from channel " << channel->get_name());
 
+	channel->remove_member(user);
+	user->leave_channel(channel);
 	// remove empty channel
 	if (channel->get_members().empty())
 		remove_channel(name);
