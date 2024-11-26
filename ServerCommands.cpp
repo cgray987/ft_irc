@@ -574,6 +574,7 @@ int Server::JOIN(User *user, std::stringstream &command)
 	{
 		// create if doesnt exist
 		channel = create_channel(name);
+		channel->add_member(user);
 		channel->add_operator(user);
 
 		// TODO: set default modes here
@@ -581,10 +582,10 @@ int Server::JOIN(User *user, std::stringstream &command)
 
 	// TODO: add a check for invite-only
 
-	if (channel->is_member(user))
-		return 0;
-
-	channel->add_member(user);
+	// if (channel->is_member(user))
+	// 	return 0;
+	if (!channel->is_member(user))
+		channel->add_member(user);
 	user->join_channel(channel);
 
 	// send join message to the user and members of channel
@@ -609,10 +610,14 @@ int Server::JOIN(User *user, std::stringstream &command)
 	std::string members;
 	for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
 	{
-		members = members + (*it)->get_nick() + " ";
+		//check if member is op : they get '@' symbol
+		// if ((*it)->get_op(channel))
+		// 	members += "@" + (*it)->get_nick() + " ";
+		// else
+			members += (*it)->get_nick() + " ";
 	}
 
-	reply(user, "", "353", user->get_nick() + "= " + name , members); // RPL_NAMREPLY
+	reply(user, "", "353", user->get_nick() + " = " + name , members); // RPL_NAMREPLY
 	reply(user, "", "366", user->get_nick() + " " + name, "End of NAMES list"); // RPL_ENDOFNAMES
 	LOG("User " << user->get_nick() << " added to channel " << channel->get_name());
 	return 0;
