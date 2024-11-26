@@ -295,7 +295,6 @@ void Server::remove_channel(const std::string &name)
 			reply(user, "", "NOTICE", "", "Channel " + name + " has been removed.");
 		}
 
-		delete channel;
 		delete it->second;
 		_channels.erase(it);
 	}
