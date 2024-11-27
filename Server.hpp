@@ -76,10 +76,14 @@ class Server
 
 		void	reply(User *user, std::string prefix, std::string command,
 						std::string target, std::string message);
-		void	add_user(User *user);
-		void	remove_user(User *user);
+
 		void	register_client(User *user);
 		void	send_server_response(User *user, std::string send_buf);
+
+		//users
+		User	*get_user_from_nick(std::string nick);
+		void	add_user(User *user);
+		void	remove_user(User *user);
 
 		// channels
 		Channel *get_channel(const std::string &name);

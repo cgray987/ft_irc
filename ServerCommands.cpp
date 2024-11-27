@@ -2,6 +2,7 @@
 #include "Log.hpp"
 #include <string>
 #define VALID_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789[]{}\\|^`–-_"
+#define OPER_PASS "password"
 
 
 
@@ -139,7 +140,30 @@ int Server::KILL(User *user, std::stringstream &command)
 	return (0);
 
 }
-int Server::OPER(User *user, std::stringstream &command){return (0);}
+// OPER <name> <password>
+// password is seperate from the server password, and ideally should be unique to each OP
+// 	-currently just using a defined password, OPER_PASS
+// this command will make username an operator to any currently joined channels as well as a global op
+int Server::OPER(User *user, std::stringstream &command)
+{
+	std::string	username, password;
+
+	command >> username >> password;
+
+	if (user->get_reg() == false)
+		return (reply(user, "", "451", "", "You have not registered"), 1); //ERR_NOTREGISTERED
+	if (username.empty() || password.empty())
+		return (reply(user, "", "461", "KICK", "Not enough parameters"), 1); //ERR_NEEDMOREPARAMS
+	if (user->get_user() != username)
+		return (reply(user, "", "491", "", "No O-lines for your host"), 1);//ERR_NOOPERHOST
+	if (password != OPER_PASS)
+		return (reply(user, "", "464", user->get_nick(), "Password incorrect"), 1);//ERRPASSWDMISMATCH
+
+	for (std::set<Channel *>::iterator it = user->get_channels().begin(); it != user->get_channels().end(); ++it)
+		(*it)->add_operator(user);
+	user->set_op(true);
+	return (reply(user, "", "381", "", "You are now an IRC operator"), 0);
+}
 
 int Server::KICK(User *user, std::stringstream &command)
 {
@@ -381,8 +405,37 @@ int Server::MODE(User *user, std::stringstream &command)
 	return (0);
 }
 
+// WHO <mask>
+//	-where mask is either a channel name or an exact nick (mask pattern not supported)
+int Server::WHO(User *user, std::stringstream &command)
+{
+	if (user->get_reg() == false)
+		return (reply(user, "", "451", "", "You have not registered"), 1); //ERR_NOTREGISTERED
+	std::string mask;
+	command >> mask;
 
-int Server::WHO(User *user, std::stringstream &command){return (0);}
+	if (mask.empty())
+		return (reply(user, "", "461", "KICK", "Not enough parameters"), 1); //ERR_NEEDMOREPARAMS
+
+	Channel *target_channel = get_channel(mask);
+	User	*target_user = NULL;
+	if (!target_channel)
+		target_user = get_user_from_nick(mask);
+	if (!target_user && target_channel)
+	{
+		for (std::set<User *>::iterator it = target_channel->get_members().begin(); it != target_channel->get_members().end(); ++it)
+			reply(user, "", "352", " ", target_channel->get_name() + " " + (*it)->get_prefix());	//RPL_WHOREPLY (352)
+				//i don't think this is the right format, functioning right, but irssi isn't displaying
+	}
+	if (!target_channel && target_user)
+	{
+		reply(user, "", "352", target_user->get_prefix(), target_user->get_realname());	//RPL_WHOREPLY (352)
+		//i don't think this is the right format, functioning right, but irssi isn't displaying
+	}
+
+	reply(user, "", "315", "ft_irc", "End of WHO list");//RPL_ENDOFWHO (315)
+	return (0);
+}
 
 // DELETE WITH COMMIT ?
 // so it seems like it works as it should, one small "issue" is that
@@ -657,8 +710,10 @@ int Server::PART(User *user, std::stringstream &command)
 	//get reason for parting
 	getline(command, reason);
 
-	if (reason.empty())
-		reason = "leaving";
+	size_t pos = reason.find_first_not_of(" \t\n\r\f\v");
+	if (pos != std::string::npos && reason[pos] == ':')
+		reason.erase(0, pos + 1);
+
 
 	// send PART message to users in channel
 	reply(user, user->get_prefix(), "PART", channel->get_name(), reason);

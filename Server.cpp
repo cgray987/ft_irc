@@ -239,6 +239,17 @@ void	Server::reply(User *user, std::string prefix, std::string command,
 	LOG("Sent reply to FD " << user->get_fd() << ": " << reply);
 }
 
+User	*Server::get_user_from_nick(std::string nick)
+{
+	for (std::vector<User *>::iterator it = _users.begin(); it != _users.end(); ++it)
+	{
+		if ((*it)->get_nick() == nick)
+		{std::cout << "user found: " << (*it)->get_nick() << "\n";
+			return (*it);}
+	}
+	return (NULL);
+}
+
 void	Server::add_user(User *user)
 {
 	_users.push_back(user);
