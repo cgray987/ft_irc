@@ -15,6 +15,7 @@ class Channel
 		std::set<User *> _members;
 		std::set<User *> _operators;
 		std::set<char> _modes;
+		std::set<User *> _invited_users; // added for tracking invited users
 
 	public:
 		Channel();
@@ -41,5 +42,10 @@ class Channel
 		void set_mode(char mode, bool value);
 		bool get_mode(char mode) const;
     	std::string str_modes() const;
+
+		// invites
+		void add_invite(User* user);
+		bool is_invited(User* user) const;
+		void remove_invite(User* user);
 
 };

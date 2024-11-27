@@ -77,3 +77,19 @@ std::string Channel::str_modes() const
 		ret += *it;
 	return ret;
 }
+
+// invites
+void Channel::add_invite(User *user)
+{
+	_invited_users.insert(user);
+}
+
+bool Channel::is_invited(User *user) const
+{
+	return _invited_users.find(user) != _invited_users.end();
+}
+
+void Channel::remove_invite(User *user)
+{
+	_invited_users.erase(user);
+}
