@@ -270,7 +270,31 @@ int Server::PING(User *user, std::stringstream &command)
 	return (0);
 }
 
-int Server::INVITE(User *user, std::stringstream &command){return (0);}
+int Server::INVITE(User *user, std::stringstream &command)
+{
+	if (user->get_reg() == false)
+		return (reply(user, "", "451", "", "You have not registered"), 1); //ERR_NOTREGISTERED
+	std::string	nick, channel;
+
+	command >> nick >> channel;
+	User *target_user = get_user_from_nick(nick);
+	Channel *target_channel = get_channel(channel);
+	if (!target_user || !target_channel)
+		return (reply(user, "", "401", "nick", "No such nick/channel"), 1); //ERR_NOSUCHNICK
+
+	if (target_channel->is_member(target_user))
+		return (reply(user, "", "443", "", nick + " " + channel +":Is already on channel"), 1); //ERR_USERONCHANNEL
+	if (!target_channel->is_member(user))
+		return (reply(user, "", "443", "", nick + ":You are not on channel"), 1);//ERR_NOTONCHANNEL
+	//ERR_CHANOPRIVSNEEDED
+
+	//RPL_INVITING
+	reply(user, "", "341", "", nick + " " + channel);
+	std::stringstream ss(channel);
+	JOIN(target_user, ss); //not sure this works
+
+	return (0);
+}
 
 // https://dd.ircdocs.horse/refs/commands/topic
 int Server::TOPIC(User *user, std::stringstream &command)
