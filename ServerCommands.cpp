@@ -274,25 +274,50 @@ int Server::INVITE(User *user, std::stringstream &command)
 {
 	if (user->get_reg() == false)
 		return (reply(user, "", "451", "", "You have not registered"), 1); //ERR_NOTREGISTERED
-	std::string	nick, channel;
 
-	command >> nick >> channel;
-	User *target_user = get_user_from_nick(nick);
-	Channel *target_channel = get_channel(channel);
-	if (!target_user || !target_channel)
-		return (reply(user, "", "401", "nick", "No such nick/channel"), 1); //ERR_NOSUCHNICK
+	std::string channel_name, target_nick;
+	command >> channel_name >> target_nick;
 
-	if (target_channel->is_member(target_user))
-		return (reply(user, "", "443", "", nick + " " + channel +":Is already on channel"), 1); //ERR_USERONCHANNEL
-	if (!target_channel->is_member(user))
-		return (reply(user, "", "443", "", nick + ":You are not on channel"), 1);//ERR_NOTONCHANNEL
-	//ERR_CHANOPRIVSNEEDED
+	// Checking for parameters
+	if (channel_name.empty() || target_nick.empty())
+	{
+		reply(user, "", "461", "INVITE", ":Not enough parameters"); // ERR_NEEDMOREPARAMS
+		return 1;
+	}
 
-	//RPL_INVITING
-	reply(user, "", "341", "", nick + " " + channel);
-	std::stringstream ss(channel);
-	JOIN(target_user, ss); //not sure this works
+	// getting the channel
+	Channel *channel = get_channel(channel_name);
+	if (!channel)
+	{
+		reply(user, "", "403", channel_name, ":No such channel"); // ERR_NOSUCHCHANNEL
+		return 1;
+	}
 
+	// inviter needs to be operator
+	if(!channel->is_operator(user))
+	{
+		reply(user, "", "482", channel_name, ":You're not a channel operator");
+	}
+
+	// Find the target user
+	User *target = get_user_from_nick(target_nick);
+
+	if (!target)
+	{
+		reply(user, "", "401", target_nick, ":No such nick");
+		return 1;
+	}
+	// adding to inv list
+	channel->add_invite(target);
+
+	// notify inviter
+	reply(user, "", "341", channel_name, target->get_nick() + " :Invited");
+
+	// notify the invitee (is this even a word lol)
+	std::string invite_msg = ":" + user->get_prefix() + " INVITE " + target_nick + " :" + channel_name + "\n";
+	send(target->get_fd(), invite_msg.c_str(), invite_msg.length(), 0);
+
+	std::cout << "User " << target->get_nick() << " has been invited to the " << channel_name << "\n";
 	return (0);
 }
 
@@ -647,34 +672,53 @@ int Server::JOIN(User *user, std::stringstream &command)
 	}
 
 	Channel *channel = get_channel(name);
+
+	// This serves as flag for the invite only check, if its not here
+	// you basically kick everybody inside of the channel while 
+	// trying to join and not having been invited
+	bool new_channel = false;
 	if (!channel)
 	{
 		// create if doesnt exist
 		channel = create_channel(name);
+		LOG("Channel " << name << " created.");
+		new_channel = true;
 		channel->add_member(user);
 		channel->add_operator(user);
-
+		user->join_channel(channel);
 		// TODO: set default modes here
 	}
 
 	// TODO: add a check for invite-only
+	// done :)
+	if (channel->get_mode('i') && !channel->is_invited(user) && !channel->is_operator(user))
+	{
+		reply(user, "", "473", channel->get_name(), "Cannot join channel (+i) - invite only"); // ERR_INVITEONLYCHAN
+		// Clean up the channel if it was created but unused
+		if (new_channel && channel->get_members().empty() && channel->get_operators().empty())
+		{
+			LOG("Cleaning up unused invite-only channel: " << name);
+			remove_channel(name);
+		}
+		return 1;
+	}
 
-	// if (channel->is_member(user))
-	// 	return 0;
+
+	// Add the user to the channel only if they are not already a member
 	if (!channel->is_member(user))
+	{
 		channel->add_member(user);
-	user->join_channel(channel);
+		user->join_channel(channel);
+	}
+
 
 	// send join message to the user and members of channel
-	std::string join_msg = ":" + user->get_nick() + " JOIN " + name + "\n";
 	reply(user, user->get_prefix(), "JOIN", name, "");
-	// send(user->get_fd(), join_msg.c_str(), join_msg.length(), 0);
 
 	for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
 	{
 		if (*it != user)
 			reply((*it), user->get_prefix(), "JOIN", name, "");
-			// send((*it)->get_fd(), join_msg.c_str(), join_msg.length(), 0);
 	}
 
 	// send channel topic
