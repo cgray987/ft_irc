@@ -27,6 +27,7 @@ class Channel
 		const std::string& get_topic() const;
 		const std::set<User*> &get_members() const;
 		const std::set<User*> &get_operators() const;
+		const std::set<User *> &get_invitees() const;
 		// setters
 		void add_member(User* user);
 		void remove_member(User* user);

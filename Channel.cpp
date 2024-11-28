@@ -16,6 +16,8 @@ const std::set<User*>& Channel::get_members() const {return _members;}
 
 const std::set<User*>& Channel::get_operators() const {return _operators;}
 
+const std::set<User*>& Channel::get_invitees() const {return _invited_users;}
+
 // setters
 void Channel::add_member(User* user)
 {

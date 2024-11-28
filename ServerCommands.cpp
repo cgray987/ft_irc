@@ -160,7 +160,10 @@ int Server::OPER(User *user, std::stringstream &command)
 		return (reply(user, "", "464", user->get_nick(), "Password incorrect"), 1);//ERRPASSWDMISMATCH
 
 	for (std::set<Channel *>::iterator it = user->get_channels().begin(); it != user->get_channels().end(); ++it)
-		(*it)->add_operator(user);
+	{
+		if ((*it)->is_operator(user))
+			(*it)->add_operator(user);
+	}
 	user->set_op(true);
 	return (reply(user, "", "381", "", "You are now an IRC operator"), 0);
 }
@@ -176,6 +179,17 @@ int Server::KICK(User *user, std::stringstream &command)
 	std::string channel_name, target_nick, comment;
 	command >> channel_name >> target_nick;
 	std::getline(command, comment);
+
+	//irssi automatically adds the channel in the command, so if you specify it in
+	//your command, it is added twice -- hence why i delete channel name from comment
+	std::size_t	pos = comment.find(channel_name);
+	if (pos != std::string::npos)
+		comment.erase(pos, channel_name.length());
+	pos = comment.find(":");
+	if (pos != std::string::npos)
+		comment.erase(pos, 1);
+
+
 
 	// Checking for parameters
 	if (channel_name.empty() || target_nick.empty())
@@ -207,15 +221,7 @@ int Server::KICK(User *user, std::stringstream &command)
 	}
 
 	// Find the target user
-	User *target = NULL;
-	for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
-	{
-		if ((*it)->get_nick() == target_nick)
-		{
-			target = *it;
-			break;
-		}
-	}
+	User *target = get_user_from_nick(target_nick);
 
 	if (!target)
 	{
@@ -231,7 +237,7 @@ int Server::KICK(User *user, std::stringstream &command)
 
 	std::string kick_reason = comment.empty() ? "Kicked by operator" : comment;
 	std::stringstream part_command;
-	part_command << channel_name << " :" << kick_reason;
+	part_command << channel_name << kick_reason;
 
 	PART(target, part_command);
 
@@ -239,7 +245,7 @@ int Server::KICK(User *user, std::stringstream &command)
 	std::string kick_msg = ":" + user->get_prefix() + " KICK " + channel_name + " " + target_nick + " :" + kick_reason + "\n";
 	for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
 	{
-		reply((*it), user->get_prefix(), "KICK" + channel_name, target_nick, kick_reason); //might be server prefix
+		reply((*it), user->get_prefix(), "KICK " + channel_name, target_nick, kick_reason); //might be server prefix
 		// send((*it)->get_fd(), kick_msg.c_str(), kick_msg.length(), 0);
 	}
 
@@ -270,18 +276,20 @@ int Server::PING(User *user, std::stringstream &command)
 	return (0);
 }
 
+//https://modern.ircdocs.horse/#invite-message
+// INVITE <nick> <channel>
 int Server::INVITE(User *user, std::stringstream &command)
 {
 	if (user->get_reg() == false)
 		return (reply(user, "", "451", "", "You have not registered"), 1); //ERR_NOTREGISTERED
 
 	std::string channel_name, target_nick;
-	command >> channel_name >> target_nick;
+	command  >> target_nick >> channel_name;
 
 	// Checking for parameters
 	if (channel_name.empty() || target_nick.empty())
 	{
-		reply(user, "", "461", "INVITE", ":Not enough parameters"); // ERR_NEEDMOREPARAMS
+		reply(user, "", "461", "INVITE", "Not enough parameters"); // ERR_NEEDMOREPARAMS
 		return 1;
 	}
 
@@ -289,14 +297,14 @@ int Server::INVITE(User *user, std::stringstream &command)
 	Channel *channel = get_channel(channel_name);
 	if (!channel)
 	{
-		reply(user, "", "403", channel_name, ":No such channel"); // ERR_NOSUCHCHANNEL
+		reply(user, "", "403", channel_name, "No such channel"); // ERR_NOSUCHCHANNEL
 		return 1;
 	}
 
 	// inviter needs to be operator
 	if(!channel->is_operator(user))
 	{
-		reply(user, "", "482", channel_name, ":You're not a channel operator");
+		reply(user, "", "482", channel_name, "You're not a channel operator");
 	}
 
 	// Find the target user
@@ -304,7 +312,7 @@ int Server::INVITE(User *user, std::stringstream &command)
 
 	if (!target)
 	{
-		reply(user, "", "401", target_nick, ":No such nick");
+		reply(user, "", "401", target_nick, "No such nick");
 		return 1;
 	}
 	// adding to inv list
@@ -315,10 +323,28 @@ int Server::INVITE(User *user, std::stringstream &command)
 
 	// notify the invitee (is this even a word lol)
 	std::string invite_msg = ":" + user->get_prefix() + " INVITE " + target_nick + " :" + channel_name + "\n";
-	send(target->get_fd(), invite_msg.c_str(), invite_msg.length(), 0);
-
+	// send(target->get_fd(), invite_msg.c_str(), invite_msg.length(), 0);
+	reply(target, user->get_prefix(), "", "INVITE " + target->get_nick(), channel->get_name());
 	std::cout << "User " << target->get_nick() << " has been invited to the " << channel_name << "\n";
 	return (0);
+}
+
+//ACCEPT <invited_server>
+int Server::ACCEPT(User *user, std::stringstream &command)
+{
+	int	ret = 0;
+	std::string	channel_name;
+	command >> channel_name;
+
+	Channel *channel = get_channel(channel_name);
+	if (channel && channel->is_invited(user))
+	{
+		std::stringstream ss(channel->get_name());
+		ret = JOIN(user, ss);
+	}
+	else
+		return 1;
+	return (ret);
 }
 
 // https://dd.ircdocs.horse/refs/commands/topic
@@ -674,7 +700,7 @@ int Server::JOIN(User *user, std::stringstream &command)
 	Channel *channel = get_channel(name);
 
 	// This serves as flag for the invite only check, if its not here
-	// you basically kick everybody inside of the channel while 
+	// you basically kick everybody inside of the channel while
 	// trying to join and not having been invited
 	bool new_channel = false;
 	if (!channel)
@@ -713,12 +739,12 @@ int Server::JOIN(User *user, std::stringstream &command)
 
 
 	// send join message to the user and members of channel
-	reply(user, user->get_prefix(), "JOIN", name, "");
+	reply(user, user->get_prefix(), "JOIN", channel->get_name(), "");
 
 	for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
 	{
 		if (*it != user)
-			reply((*it), user->get_prefix(), "JOIN", name, "");
+			reply((*it), user->get_prefix(), "JOIN", channel->get_name(), "");
 	}
 
 	// send channel topic
@@ -732,9 +758,9 @@ int Server::JOIN(User *user, std::stringstream &command)
 	for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
 	{
 		//check if member is op : they get '@' symbol
-		// if ((*it)->get_op(channel))
-		// 	members += "@" + (*it)->get_nick() + " ";
-		// else
+		if (channel->is_operator(*it))
+			members += "@" + (*it)->get_nick() + " ";
+		else
 			members += (*it)->get_nick() + " ";
 	}
 
