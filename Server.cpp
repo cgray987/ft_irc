@@ -87,7 +87,6 @@ void	Server::init_command_map()
 	command_map["USER"] = &Server::USER;
 	command_map["OPER"] = &Server::OPER;
 	command_map["REMOVE_CHANNEL"] = &Server::REMOVE_CHANNEL;
-	command_map["ACCEPT"] = &Server::ACCEPT;
 	this->_command_map = command_map;
 }
 

@@ -12,6 +12,8 @@ int Server::CAP(User *user, std::stringstream &command)
 {
 	// std::string buf;
 	// command >> buf;
+	(void)user;
+	(void)command;
 	return (0);
 }
 
@@ -121,6 +123,7 @@ int Server::QUIT(User *user, std::stringstream &command)
 {
 	std::cout << YEL << "Client disconnected\n" << RST;
 	Server::remove_user(user);
+	(void)command;
 
 	//TODO remove user's channels in server as well
 
@@ -130,6 +133,7 @@ int Server::QUIT(User *user, std::stringstream &command)
 }
 int Server::KILL(User *user, std::stringstream &command)
 {
+	(void)command;
 	if (user->get_op() == true)
 	{
 		std::cout << RED << "Server killed.\n" << RST;
@@ -329,7 +333,7 @@ int Server::INVITE(User *user, std::stringstream &command)
 	return (0);
 }
 
-//ACCEPT <invited_server>
+/* //ACCEPT <invited_server>
 int Server::ACCEPT(User *user, std::stringstream &command)
 {
 	int	ret = 0;
@@ -345,7 +349,7 @@ int Server::ACCEPT(User *user, std::stringstream &command)
 	else
 		return 1;
 	return (ret);
-}
+} */
 
 // https://dd.ircdocs.horse/refs/commands/topic
 int Server::TOPIC(User *user, std::stringstream &command)
@@ -666,11 +670,14 @@ int Server::PRIVMSG(User *user, std::stringstream &command)
 		// send(target_user->get_fd(), privmsg.c_str(), privmsg.length(), 0);
 	else //sending to each member in the channel
 	{
-		for (std::set<User *>::iterator it = target_channel->get_members().begin(); it != target_channel->get_members().end(); ++it)
+		if (target_channel->is_member(user))
 		{
-			if (*it != user) //send to everyone but yourself
-				reply((*it), user->get_prefix(), "PRIVMSG", target_channel->get_name(), message);
-				// send((*it)->get_fd(), privmsg.c_str(), privmsg.length(), 0);
+			for (std::set<User *>::iterator it = target_channel->get_members().begin(); it != target_channel->get_members().end(); ++it)
+			{
+				if (*it != user) //send to everyone but yourself
+					reply((*it), user->get_prefix(), "PRIVMSG", target_channel->get_name(), message);
+					// send((*it)->get_fd(), privmsg.c_str(), privmsg.length(), 0);
+			}
 		}
 	}
 	// std::cout << "PRIVMSG successful\n";
@@ -697,6 +704,7 @@ int Server::JOIN(User *user, std::stringstream &command)
 		return 1;
 	}
 
+
 	Channel *channel = get_channel(name);
 
 	// This serves as flag for the invite only check, if its not here
@@ -719,7 +727,7 @@ int Server::JOIN(User *user, std::stringstream &command)
 	// done :)
 	if (channel->get_mode('i') && !channel->is_invited(user) && !channel->is_operator(user))
 	{
-		reply(user, "", "473", channel->get_name(), "Cannot join channel (+i) - invite only"); // ERR_INVITEONLYCHAN
+		reply(user, "", "473", user->get_nick() + " " + channel->get_name(), "Cannot join channel (+i)"); // ERR_INVITEONLYCHAN
 		// Clean up the channel if it was created but unused
 		if (new_channel && channel->get_members().empty() && channel->get_operators().empty())
 		{

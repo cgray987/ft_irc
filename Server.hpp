@@ -111,7 +111,6 @@ class Server
 
 		int JOIN(User *user, std::stringstream &command);
 		int REMOVE_CHANNEL(User *user, std::stringstream &command); // needs a better name, probably :D
-		int ACCEPT(User *user, std::stringstream &command);
 		//error messages
 };
 
