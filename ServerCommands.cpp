@@ -718,7 +718,7 @@ int Server::JOIN(User *user, std::stringstream &command)
 	std::string name, password;
 	command >> name;
 	command >> password;
-	command.clear();
+
 	LOG("Parsed JOIN command: Channel name: [" + name + "], Password: [" + password + "]");
 	if (name.empty())
 	{
