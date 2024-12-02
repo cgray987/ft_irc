@@ -9,7 +9,7 @@
 			"type": "cppdbg",
 			"request": "launch",
 			"program": "${workspaceFolder}/ircserv",
-			"args": ["1234", "1234"], //<port> <password> CHANGE PORT IN BIND FAILURE
+			"args": ["1235", "1234"], //<port> <password> CHANGE PORT IN BIND FAILURE
 			"stopAtEntry": false,
 			"cwd": "${fileDirname}",
 			"environment": [],

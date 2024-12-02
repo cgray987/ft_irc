@@ -116,12 +116,6 @@ int	Server::new_connection()
 	_users.push_back(new_user);
 	new_user->set_fd(connection_socket);
 
-	//might need to be somewhere else
-	// Server::register_client(new_user);
-
-	// new_user->set_auth(true); --now in PASS
-	// ^^ might have to use this here instead of register_client as we are now registering in USER and NICK
-
 	struct epoll_event	ev;
 	ev.events = EPOLLIN | EPOLLET;
 	ev.data.ptr = new_user;
@@ -143,8 +137,7 @@ int	Server::client_message(User *user)
 	if (bytes == -1)
 	{
 		std::cout << RED << "~Server~ recv() failure [456]\n" << RST;
-		// perror("recv");
-		throw std::runtime_error("Error in recv()");
+		throw std::runtime_error("Error in recv()"); //TODO -leaks?
 		return (1);
 	}
 
@@ -157,13 +150,11 @@ int	Server::client_message(User *user)
 	}
 
 	LOG("Received raw message from FD: " << user->get_fd() << ": " << std::string(buf, bytes));
-	// std::cout << "\tbuf: " << buf;
 	_msg.append(buf);
 
 	// processing each commang in _msg
 	std::stringstream ss(_msg);
 	std::string line;
-	// LOG("Processing command: " + line + " from user " + user->get_user());
 
 	while(std::getline(ss, line, '\n'))
 	{
@@ -197,17 +188,11 @@ int Server::get_command(User *user, std::string msg)
 		std::stringstream params;
 		params << ss.rdbuf(); // Get the remaining parameters
 		LOG("Calling command function for: " + word + " params: " + params.str());
-		// std::cout << "Calling command function for: " << word << " with params: " << RED << params.str() << std::endl << RST;
-		// clearing after processing the command
-		// if (ret == 0)
-		// 	_msg.clear();
 		return (this->*(it->second))(user, params);
 	}
 	else
 	{
 		reply(user, "", "421", word, ":Unknown command"); // ERR_UNKNOWNCOMMAND
-		// clearing invalids also --can't do this because command might be valid, but not complete (nc ctrl-d from subject)
-		// _msg.clear();
 		return 1;
 	}
 }
@@ -215,16 +200,6 @@ int Server::get_command(User *user, std::string msg)
 void	Server::reply(User *user, std::string prefix, std::string command,
 						std::string target, std::string message)
 {
-	// std::string	reply;
-	// if (!prefix.empty())
-	// 	reply += ":" + prefix + " ";
-	// reply += command;
-	// if (!target.empty())
-	// 	reply += " " + target;
-	// if (!message.empty())
-	// 	reply += " :" + message;
-	// reply += "\n"; // correct line ending ?
-
 	std::string	reply;
 	if (!prefix.empty())
 		reply.append(prefix + " ");
@@ -263,7 +238,6 @@ User	*Server::get_user_from_nick(std::string nick)
 void	Server::add_user(User *user)
 {
 	_users.push_back(user);
-	// register_client(user);
 }
 
 void	Server::remove_user(User *user)
