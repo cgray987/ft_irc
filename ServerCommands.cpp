@@ -428,7 +428,7 @@ int Server::MODE(User *user, std::stringstream &command)
 		return 1;
 	}
 
-	std::string target;
+	std::string target, param;
 	command >> target;
 
 	if (target.empty())
@@ -464,17 +464,38 @@ int Server::MODE(User *user, std::stringstream &command)
 		bool add = true;
 		for (size_t i = 0; i < modes.length(); ++i)
 		{
-			char c = modes[i];
-			if (c == '+')
+			char mode = modes[i];
+			if (mode == '+')
 				add = true;
-			else if (c == '-')
+			else if (mode == '-')
 				add = false;
+			else if (mode == 'k')
+			{
+				if(add)
+				{
+					command >> param;
+					if(param.empty())
+					{
+						reply(user, "", "461", "MODE", "Not enough parameters for +k");
+						return 1;
+					}
+					channel->set_mode('k', true);
+					channel->set_password(param);
+					LOG("Mode +k enabled with password: " << param);
+				}
+				else
+				{
+					channel->set_mode('k', false);
+					channel->set_password("");
+					LOG("Mode +k disabled, password cleared");
+				}
+			}
 			else
-				channel->set_mode(c, add);
+				channel->set_mode(mode, add);
 		}
 
 		// notify users
-		std::string notify = ":" + user->get_nick() + "MODE" + target + " " + modes + "\n";
+		// std::string notify = ":" + user->get_nick() + "MODE" + target + " " + modes + "\n";
 		for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
 			reply((*it), user->get_prefix(), "MODE", target, modes);
 			// send((*it)->get_fd(), notify.c_str(), notify.length(), 0);
@@ -694,9 +715,11 @@ int Server::JOIN(User *user, std::stringstream &command)
 		return 1;
 	}
 
-	std::string name;
+	std::string name, password;
 	command >> name;
+	command >> password;
 
+	LOG("Parsed JOIN command: Channel name: [" + name + "], Password: [" + password + "]");
 	if (name.empty())
 	{
 		// ERR_NEEDMOREPARAMS
@@ -722,9 +745,16 @@ int Server::JOIN(User *user, std::stringstream &command)
 		user->join_channel(channel);
 		// TODO: set default modes here
 	}
-
-	// TODO: add a check for invite-only
-	// done :)
+	if (channel->get_mode('k') && channel->has_password() && channel->get_password() != password)
+	{
+		LOG("Checking password for channel: " << channel->get_name());
+    	LOG("Expected password: [" << channel->get_password() << "], Provided password: [" << password << "]");
+		// Format:	<source> 475 <target> <channel> :Cannot join channel, you need the correct key (+k)
+		reply(user, "", "475", user->get_nick() + " " + channel->get_name(), "Cannot join channel (+k) - you need the correct key");
+		if(new_channel)
+			remove_channel(name);
+		return 1;
+	}
 	if (channel->get_mode('i') && !channel->is_invited(user) && !channel->is_operator(user))
 	{
 		reply(user, "", "473", user->get_nick() + " " + channel->get_name(), "Cannot join channel (+i)"); // ERR_INVITEONLYCHAN

@@ -169,7 +169,18 @@ int	Server::client_message(User *user)
 	{
 		if(line.empty()) continue;
 		// std::cout << "\tProcessing command: " << line << std::endl;
-		get_command(user, line);
+		int ret = get_command(user, line);
+		// Clear _msg only after successfully processing a command
+		if (ret == 0)
+			_msg.clear();
+		else
+		{
+		// If command fails, keeping unprocessed data
+			std::string remaining;
+			if (ss.rdbuf()->in_avail() > 0)
+				remaining.assign(std::istreambuf_iterator<char>(ss), std::istreambuf_iterator<char>());
+			_msg = remaining;
+		}
 	}
 	return 0;
 }
@@ -178,7 +189,6 @@ int Server::get_command(User *user, std::string msg)
 {
 	std::stringstream	ss(msg);
 	std::string			word;
-	int					ret = 0;
 	ss >> word;
 
 	std::map<std::string, CommandFunc>::iterator it = _command_map.find(word);
@@ -188,18 +198,18 @@ int Server::get_command(User *user, std::string msg)
 		params << ss.rdbuf(); // Get the remaining parameters
 		LOG("Calling command function for: " + word + " params: " + params.str());
 		// std::cout << "Calling command function for: " << word << " with params: " << RED << params.str() << std::endl << RST;
-		ret = (this->*(it->second))(user, params);
 		// clearing after processing the command
-		if (ret == 0)
-			_msg.clear();
+		// if (ret == 0)
+		// 	_msg.clear();
+		return (this->*(it->second))(user, params);
 	}
 	else
 	{
 		reply(user, "", "421", word, ":Unknown command"); // ERR_UNKNOWNCOMMAND
 		// clearing invalids also --can't do this because command might be valid, but not complete (nc ctrl-d from subject)
 		// _msg.clear();
+		return 1;
 	}
-	return ret;
 }
 
 void	Server::reply(User *user, std::string prefix, std::string command,
