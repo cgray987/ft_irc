@@ -543,10 +543,11 @@ int Server::MODE(User *user, std::stringstream &command)
 		}
 
 		// notify users
-		std::string notify = ":" + user->get_nick() + "MODE" + target + " " + (add ? "+" : "-") + modes + "\n";
-		for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
-			reply((*it), user->get_prefix(), "MODE", target, modes);
-			// send((*it)->get_fd(), notify.c_str(), notify.length(), 0);
+		std::string notify_modes = (add ? "+" : "-") + modes;
+        std::string notify = ":" + user->get_prefix() + " MODE " + target + " " + notify_modes + "\r\n";
+
+        for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
+            send((*it)->get_fd(), notify.c_str(), notify.length(), 0);
 	}
 
 	return (0);
