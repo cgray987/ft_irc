@@ -9,7 +9,7 @@ ifeq ($(DEBUG),1)
     CPPFLAGS += -DDEBUG
 endif
 
-SRC = main.cpp Server.cpp User.cpp ServerCommands.cpp Channel.cpp Log.cpp
+SRC = main.cpp Server.cpp User.cpp ServerCommands.cpp Channel.cpp Log.cpp Utils.cpp
 OBJ = $(SRC:.cpp=.o)
 
 # Colors:
