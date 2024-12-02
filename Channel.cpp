@@ -71,6 +71,42 @@ bool Channel::get_mode(char mode) const
     return _modes.find(mode) != _modes.end();
 }
 
+// for k mode
+void Channel::set_key(const std::string &key)
+{
+    _key = key;
+    set_mode('k', true);
+}
+
+void Channel::remove_key()
+{
+    _key.clear();
+    set_mode('k', false);
+}
+
+const std::string &Channel::get_key() const
+{
+    return _key;
+}
+
+// for l mode
+void Channel::set_user_limit(size_t limit)
+{
+    _userlimit = limit;
+    set_mode('l', true);
+}
+
+void Channel::remove_user_limit()
+{
+    _userlimit = 0;
+    set_mode('l', false);
+}
+
+size_t Channel::get_user_limit() const
+{
+    return _userlimit;
+}
+
 // return current channel modes as string
 std::string Channel::str_modes() const
 {

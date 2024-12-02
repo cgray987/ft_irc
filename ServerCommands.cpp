@@ -1,5 +1,6 @@
 #include "Server.hpp"
 #include "Log.hpp"
+#include "Utils.cpp"
 #include <string>
 #define VALID_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789[]{}\\|^`–-_"
 #define OPER_PASS "password"
@@ -420,6 +421,7 @@ int Server::TOPIC(User *user, std::stringstream &command)
 	return (0);
 }
 
+// MODE <channel> {[+|-]<modes>} [<mode parameters>]
 int Server::MODE(User *user, std::stringstream &command)
 {
 	if (user->get_reg() == false)
@@ -445,11 +447,6 @@ int Server::MODE(User *user, std::stringstream &command)
 			reply(user, "", "403", target, "No such channel");
 			return 1;
 		}
-		if (!channel->is_operator(user))
-		{
-			reply(user, "", "482", target, "You're not a channel operator");
-			return 1;
-		}
 
 		std::string modes;
 		command >> modes;
@@ -461,25 +458,96 @@ int Server::MODE(User *user, std::stringstream &command)
 			return 0;
 		}
 
-		bool add = true;
-		for (size_t i = 0; i < modes.length(); ++i)
+		if (!channel->is_operator(user))
 		{
-			char c = modes[i];
+			reply(user, "", "482", target, "You're not a channel operator");
+			return 1;
+		}
+
+		bool add = true;
+		std::string mode_params; // for setting password for l mode etc
+		while (!modes.empty())
+		{
+			char c = modes[0];
+			modes.erase(0, 1);
+
 			if (c == '+')
 				add = true;
 			else if (c == '-')
 				add = false;
-			else
+			else if (c == 'i')
 				channel->set_mode(c, add);
+			else if (c == 'k')
+			{
+				std::string key;
+				if (add)
+				{
+					command >> key;
+					if (key.empty())
+					{
+						reply(user, "", "461", "MODE", "Not enough parameters");
+						return 1;
+					}
+					LOG("Set key for channel " + channel->get_name() + ", " + key);
+					channel->set_key(key);
+				}
+				else
+					channel->remove_key();
+			}
+			else if (c == 'l')
+			{
+				if (add)
+				{
+					std::string limit;
+					command >> limit;
+					if (limit.empty())
+					{
+						reply(user, "", "461", "MODE", "Not enough parameters");
+						return 1;
+					}
+					size_t l = stoi(limit);
+					LOG("Set userlimit for channel " + channel->get_name() + ", " + limit);
+					channel->set_user_limit(l);
+				}
+				else
+					channel->remove_user_limit();
+			}
+			else if (c == 'o')
+			{
+				std::string nick;
+				command >> nick;
+				if (nick.empty())
+				{
+					reply(user, "", "461", "MODE", "Not enough parameters");
+					return 1;
+				}
+				User *target = get_user_from_nick(nick);
+				if (!target)
+				{
+					reply(user, "", "401", nick, "No such nick");
+                    continue;
+				}
+				if (add)
+				{
+					if (channel->is_member(target))
+					{
+						LOG("Set user " + target->get_nick() + " as op for channel " + channel->get_name());
+						channel->add_operator(target);
+					}
+				}
+				else
+					channel->remove_operator(target);
+			}
+			else
+				reply(user, "", "472", std::string(1, c), "is unknown mode char to me");
 		}
 
 		// notify users
-		std::string notify = ":" + user->get_nick() + "MODE" + target + " " + modes + "\n";
+		std::string notify = ":" + user->get_nick() + "MODE" + target + " " + (add ? "+" : "-") + modes + "\n";
 		for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
 			reply((*it), user->get_prefix(), "MODE", target, modes);
 			// send((*it)->get_fd(), notify.c_str(), notify.length(), 0);
 	}
-	// handle unknown flags here?
 
 	return (0);
 }
@@ -723,8 +791,13 @@ int Server::JOIN(User *user, std::stringstream &command)
 		// TODO: set default modes here
 	}
 
-	// TODO: add a check for invite-only
-	// done :)
+	// check for l mode
+	if (channel->get_mode('l') && channel->get_members().size() >= channel->get_user_limit())
+    {
+        reply(user, "", "471", channel->get_name(), "Cannot join channel (+l)"); // ERR_CHANNELISFULL
+        return 1;
+    }
+
 	if (channel->get_mode('i') && !channel->is_invited(user) && !channel->is_operator(user))
 	{
 		reply(user, "", "473", user->get_nick() + " " + channel->get_name(), "Cannot join channel (+i)"); // ERR_INVITEONLYCHAN
@@ -737,6 +810,16 @@ int Server::JOIN(User *user, std::stringstream &command)
 		return 1;
 	}
 
+	// check for k mode
+	std::string key;
+	command >> key;
+
+	LOG("Received key for channel " + channel->get_name() + " : " + key);
+	if (channel->get_mode('k') && channel->get_key() != key)
+	{
+		reply(user, "", "475", channel->get_name(), "Cannot join channel (+k)");
+		return 1;
+	}
 
 	// Add the user to the channel only if they are not already a member
 	if (!channel->is_member(user))
