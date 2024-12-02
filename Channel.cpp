@@ -131,3 +131,18 @@ void Channel::remove_invite(User *user)
 {
 	_invited_users.erase(user);
 }
+
+const std::string &Channel::get_password() const
+{
+	return _password;
+}
+
+void Channel::set_password(const std::string &password)
+{
+	_password = password;
+}
+
+bool Channel::has_password() const
+{
+	return !_password.empty();
+}
