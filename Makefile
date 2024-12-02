@@ -3,7 +3,7 @@ NAME = ircserv
 DEBUG ?= 0
 
 CC = c++
-CXXFLAGS = -std=c++98 -g
+CXXFLAGS = -std=c++98 -g3 #-Wall -Werror -Wextra
 
 ifeq ($(DEBUG),1)
     CPPFLAGS += -DDEBUG
