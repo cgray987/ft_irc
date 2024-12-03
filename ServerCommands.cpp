@@ -543,6 +543,11 @@ int Server::MODE(User *user, std::stringstream &command)
 				else
 					channel->remove_operator(target);
 			}
+			else if (c == 't')
+			{
+				channel->set_mode(c, add);
+				LOG((add ? "Enabled" : "Disabled") + std::string(" +t mode for channel ") + channel->get_name());
+			}
 			else
 				reply(user, "", "472", std::string(1, c), "is unknown mode char to me");
 		}
