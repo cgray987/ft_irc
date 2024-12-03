@@ -205,7 +205,7 @@ int Server::get_command(User *user, std::string msg)
 	}
 	else
 	{
-		reply(user, "", "421", word, ":Unknown command"); // ERR_UNKNOWNCOMMAND
+		reply(user, "", "421", user->get_nick() + " " + word, "Unknown command"); // ERR_UNKNOWNCOMMAND
 		// clearing invalids also --can't do this because command might be valid, but not complete (nc ctrl-d from subject)
 		// _msg.clear();
 		return 1;
@@ -234,7 +234,7 @@ void	Server::reply(User *user, std::string prefix, std::string command,
 	if (!target.empty())
 		reply.append(target + " ");
 	else
-		reply.append(user->get_prefix());
+		reply.append(user->get_prefix() + " ");
 	if (!message.empty())
 		reply.append(":" + message);
 	else

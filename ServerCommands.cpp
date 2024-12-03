@@ -76,23 +76,26 @@ int Server::USER(User *user, std::stringstream &command)
 		reply(user, "", "462", "", "You may not reregister"); //ERR_NICKNAMEINUSE
 		return 1;
 	}
-	std::string username, hostname, servername, realname;
-	command >> username >> username >> hostname >> servername;
+	std::string username, hostname, realname;
+	command >> username >> username >> hostname;
 
 	getline(command, realname);
 	// remove leading colon
 	if (!realname.empty() && realname[0] == ':')
 		realname = realname.substr(1);
-	user->set_realname(realname);
 
 	if (username.empty() || realname.empty())
 	{
 		Server::reply(user, "", "461", "USER", "Not enough parameters"); // ERR_NEEDMOREPARAMS
+		close(user->get_fd());
+		remove_user(user);
 		return 1;
 	}
 	if (!user->get_auth() && !Server::get_password().empty())
 	{
 		Server::reply(user, "", "464", "", "Password required"); // ERR_PASSWDMISMATCH
+		close(user->get_fd());
+		remove_user(user);
 		return 1;
 	}
 
@@ -574,16 +577,18 @@ int Server::WHO(User *user, std::stringstream &command)
 	if (!target_user && target_channel)
 	{
 		for (std::set<User *>::iterator it = target_channel->get_members().begin(); it != target_channel->get_members().end(); ++it)
-			reply(user, "", "352", " ", target_channel->get_name() + " " + (*it)->get_prefix());	//RPL_WHOREPLY (352)
+			reply(user, "", "352", (*it)->get_nick() + " " + target_channel->get_name(), "0 " + (*it)->get_nick());	//RPL_WHOREPLY (352)
 				//i don't think this is the right format, functioning right, but irssi isn't displaying
+		reply(user, "", "315", target_channel->get_name(), "End of WHO list");
 	}
 	if (!target_channel && target_user)
 	{
-		reply(user, "", "352", target_user->get_prefix(), target_user->get_realname());	//RPL_WHOREPLY (352)
+		reply(user, "", "352", target_user->get_nick(), target_user->get_realname());	//RPL_WHOREPLY (352)
 		//i don't think this is the right format, functioning right, but irssi isn't displaying
+		reply(user, "", "315", target_user->get_nick(), "End of WHO list");
 	}
 
-	reply(user, "", "315", "ft_irc", "End of WHO list");//RPL_ENDOFWHO (315)
+	// reply(user, "", "315", user->get_nick(), "End of WHO list");//RPL_ENDOFWHO (315)
 	return (0);
 }
 
