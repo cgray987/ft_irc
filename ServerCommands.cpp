@@ -459,13 +459,13 @@ int Server::MODE(User *user, std::stringstream &command)
 		if (modes.empty())
 		{
 			// if arguments empty, send current modes
-			reply(user, "", "324", target, channel->str_modes());
+			reply(user, "", "324", user->get_nick() + " " + target, channel->str_modes());
 			return 0;
 		}
 
 		if (!channel->is_operator(user))
 		{
-			reply(user, "", "482", target, "You're not a channel operator");
+			reply(user, "", "482", user->get_nick() + " " + target, "You're not a channel operator");
 			return 1;
 		}
 
@@ -802,7 +802,7 @@ int Server::JOIN(User *user, std::stringstream &command)
 	// check for l mode
 	if (channel->get_mode('l') && channel->get_members().size() >= channel->get_user_limit())
     {
-        reply(user, "", "471", channel->get_name(), "Cannot join channel (+l)"); // ERR_CHANNELISFULL
+        reply(user, "", "471", user->get_nick() + " " + channel->get_name(), "Cannot join channel (+l)"); // ERR_CHANNELISFULL
         return 1;
     }
 
@@ -825,7 +825,7 @@ int Server::JOIN(User *user, std::stringstream &command)
 	LOG("Received key for channel " + channel->get_name() + " : " + key);
 	if (channel->get_mode('k') && channel->get_key() != key)
 	{
-		reply(user, "", "475", channel->get_name(), "Cannot join channel (+k)");
+		reply(user, "", "475", user->get_nick() + " " + channel->get_name(), "Cannot join channel (+k)");
 		return 1;
 	}
 
@@ -848,9 +848,9 @@ int Server::JOIN(User *user, std::stringstream &command)
 
 	// send channel topic
 	if (!channel->get_topic().empty())
-		reply(user, "", "332", name, channel->get_topic()); // RPL_TOPIC
+		reply(user, "", "332", user->get_nick() + " " + name, channel->get_topic()); // RPL_TOPIC
 	else
-		reply(user, "", "331", name, "No topic set"); // RPL_NOTOPIC
+		reply(user, "", "331", user->get_nick() + " " + name, "No topic set"); // RPL_NOTOPIC
 
 	// send users in channel
 	std::string members;
