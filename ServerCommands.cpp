@@ -42,7 +42,8 @@ int Server::NICK(User *user, std::stringstream &command)
 	{
 		if ((*it)->get_nick() == nick && (*it) != user)
 		{
-			reply(user, "", "433", nick, "Nickname is already in use"); //ERR_NICKNAMEINUSE
+			reply(user, "", "433", "* " + nick, "Nickname is already in use"); //ERR_NICKNAMEINUSE
+			return (1);
 		}
 	}
 	// check is user already registered
@@ -53,6 +54,7 @@ int Server::NICK(User *user, std::stringstream &command)
 		for (std::vector<User *>::iterator it = _users.begin(); it != _users.end(); ++it)
 			reply((*it), user->get_prefix(), "NICK", nick, "");
 			// send((*it)->get_fd(), nick_msg.c_str(), nick_msg.length(), 0);
+		return (1);
 	}
 
 	user->set_nick(nick);
