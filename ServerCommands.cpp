@@ -543,6 +543,11 @@ int Server::MODE(User *user, std::stringstream &command)
 				else
 					channel->remove_operator(target);
 			}
+			else if (c == 't')
+			{
+				channel->set_mode(c, add);
+				LOG((add ? "Enabled" : "Disabled") + std::string(" +t mode for channel ") + channel->get_name());
+			}
 			else
 				reply(user, "", "472", std::string(1, c), "is unknown mode char to me");
 		}
@@ -592,14 +597,6 @@ int Server::WHO(User *user, std::stringstream &command)
 	return (0);
 }
 
-// DELETE WITH COMMIT ?
-// so it seems like it works as it should, one small "issue" is that
-// if you are in the channel and write /list it looks lie it doesnt do anything
-// but it does, it prompted you to write -yes, but outside of the channel
-// so if you write /list -yes  it will print the channels outside the channel
-// so when you leave it will show the list
-// I believe that this is a expected behaviour, but we could output something
-// inside the channel if we wanted
 int Server::LIST(User *user, std::stringstream &command)
 {
 	if (user->get_reg() == false)
@@ -614,27 +611,23 @@ int Server::LIST(User *user, std::stringstream &command)
 	if (channel_name.empty())
 	{
 		// if no specific channel requested, listing all channels
-		for (std::map<std::string, Channel *>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
+		for (std::map<std::string, Channel *>::iterator it = _channels.begin(); it != _channels.end(); ++it)
+		{
 			Channel *channel = it->second;
 			std::stringstream ss;
 
-			// here i construct the message
-			// std::string reply = ":localhost 322 " + user->get_nick() + " " + channel->get_name() + " ";
+			ss << channel->get_members().size();
+			std::string member_count = ss.str();
 
-			// ss << channel->get_members().size();
-			// reply += ss.str() + " :";
-
-			// if (!channel->get_topic().empty())
-			// 	reply += channel->get_topic();
-			// else
-			// 	reply += "No topic";
-
-			// reply += "\n";
-			// Send the RPL_LIST message (RPL means reply code btw)
-			reply(user, "", "322", channel->get_name(), channel->get_topic());
-			// send(user->get_fd(), reply.c_str(), reply.length(), 0);
+			std::string topic = channel->get_topic();
+			if(topic.empty())
+			{
+				topic = "No topic";
+			}
+			reply(user, "", "322", user->get_nick() + " " + channel->get_name() + " " + member_count, channel->get_topic());
 		}
-	} else
+	} 
+	else
 	{
 		// if specific channel requested
 		std::stringstream ss(channel_name);
@@ -642,44 +635,30 @@ int Server::LIST(User *user, std::stringstream &command)
 
 		while (std::getline(ss, single_channel, ','))
 		{
+			if (single_channel[0] != '#')
+				single_channel = "#" + single_channel;
+
 			Channel *channel = get_channel(single_channel);
 			if (channel)
 			{
-				// if the # is missing
-				// i think that this is a correct behaviour, but if not
-				// simply delete the if statement
-				if (single_channel[0] != '#')
-					single_channel = "#" + single_channel;
-				// Format the RPL_LIST reply
-				// std::string reply = ":localhost 322 " + user->get_nick() + " " + channel->get_name() + " ";
-				// ss << channel->get_members().size();
-				// reply += ss.str() + " :";
+				std::stringstream ss;
+				ss << channel->get_members().size();
+				std::string member_count = ss.str();
 
-
-				// if (!channel->get_topic().empty())
-				// 	reply += channel->get_topic();
-				// else
-				// 	reply += "No topic";
-
-				// reply += "\n";
-
-				// Send the RPL_LIST message
-				// send(user->get_fd(), reply.c_str(), reply.length(), 0);
-				reply(user, "", "322", channel->get_name(), channel->get_topic());
-			} else
+				std::string topic = channel->get_topic();
+				if(topic.empty())
+				{
+					topic = "No topic";
+				}
+				reply(user, "", "322", user->get_nick() + " " + channel->get_name() + " " + member_count, channel->get_topic());
+			}
+			else
 			{
-				// if Channel not found
-				std::string error = ":localhost 403 " + user->get_nick() + " " + single_channel + " :No such channel\n";
 				reply(user, "", "403", single_channel, "No such channel");
-				// send(user->get_fd(), error.c_str(), error.length(), 0);
 			}
 		}
 	}
-
-	// End the list with RPL_LISTEND
-	std::string list_end = ":localhost 323 " + user->get_nick() + " :End of /LIST\n";
 	reply(user, "", "323", "", "End of LIST");
-	// send(user->get_fd(), list_end.c_str(), list_end.length(), 0);
 	return (0);
 }
 
