@@ -6,6 +6,7 @@ CC = c++
 CXXFLAGS = -std=c++98 -g
 
 ifeq ($(DEBUG),1)
+	CC = g++
     CPPFLAGS += -DDEBUG
 endif
 
