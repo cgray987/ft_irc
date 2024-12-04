@@ -61,7 +61,9 @@ Server::~Server()
 		delete _users.back();
 		_users.pop_back();
 	}
-	//delete channels?
+	for (std::map<std::string, Channel *>::iterator it = _channels.begin(); it != _channels.end(); ++it)
+		delete it->second;
+	_channels.clear();
 	delete _server_user;
 }
 
@@ -164,14 +166,14 @@ int	Server::client_message(User *user)
 	std::stringstream ss(_msg);
 	std::string line;
 	// LOG("Processing command: " + line + " from user " + user->get_user());
-
+	int ret = 0;
 	while(std::getline(ss, line, '\n'))
 	{
 		if(line.empty()) continue;
 		// std::cout << "\tProcessing command: " << line << std::endl;
-		int ret = get_command(user, line);
+		ret = get_command(user, line);
 		// Clear _msg only after successfully processing a command
-		if (ret == 0)
+		if (ret == 0 || ret == -1)
 			_msg.clear();
 		else
 		{
@@ -182,7 +184,7 @@ int	Server::client_message(User *user)
 			_msg = remaining;
 		}
 	}
-	return 0;
+	return ret;
 }
 
 int Server::get_command(User *user, std::string msg)
@@ -190,6 +192,8 @@ int Server::get_command(User *user, std::string msg)
 	std::stringstream	ss(msg);
 	std::string			word;
 	ss >> word;
+
+	std::transform(word.begin(), word.end(), word.begin(), ::toupper);
 
 	std::map<std::string, CommandFunc>::iterator it = _command_map.find(word);
 	if (it != _command_map.end())

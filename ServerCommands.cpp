@@ -128,9 +128,17 @@ int Server::PASS(User *user, std::stringstream &command)
 int Server::QUIT(User *user, std::stringstream &command)
 {
 	std::cout << YEL << "Client disconnected\n" << RST;
+
+	//if the user /QUIT the channel is not removed
+	/* for (std::set<Channel *>::iterator it = user->get_channels().begin(); it != user->get_channels().end(); ++it)
+	{
+		user->leave_channel(*it);
+		if ((*it)->get_members().empty())
+			remove_channel((*it)->get_name());
+	} */
+
 	Server::remove_user(user);
 	(void)command;
-
 	//TODO remove user's channels in server as well
 
 	//clear user's msg buffer
@@ -139,7 +147,11 @@ int Server::QUIT(User *user, std::stringstream &command)
 }
 int Server::KILL(User *user, std::stringstream &command)
 {
-	(void)command;
+	std::string confirm;
+	command >> confirm;
+	if (confirm != "yes")
+		return (reply(user, "", "", user->get_nick(), "Confirm KILL with 'yes'"), 1);
+
 	if (user->get_op() == true)
 	{
 		std::cout << RED << "Server killed.\n" << RST;
@@ -315,6 +327,7 @@ int Server::INVITE(User *user, std::stringstream &command)
 	if(!channel->is_operator(user))
 	{
 		reply(user, "", "482", channel_name, "You're not a channel operator");
+		return 1;
 	}
 
 	// Find the target user
@@ -435,6 +448,7 @@ int Server::MODE(User *user, std::stringstream &command)
 		return 1;
 	}
 
+	char	c = 0;
 	std::string target;
 	command >> target;
 
@@ -473,7 +487,7 @@ int Server::MODE(User *user, std::stringstream &command)
 		std::string mode_params; // for setting password for l mode etc
 		while (!modes.empty())
 		{
-			char c = modes[0];
+			c = modes[0];
 			modes.erase(0, 1);
 
 			if (c == '+')
@@ -554,10 +568,11 @@ int Server::MODE(User *user, std::stringstream &command)
 
 		// notify users
 		std::string notify_modes = (add ? "+" : "-") + modes;
-        std::string notify = ":" + user->get_prefix() + " MODE " + target + " " + notify_modes + "\r\n";
+        std::string notify = user->get_prefix() + " MODE " + target + " " + notify_modes + c + "\r\n";
 
         for (std::set<User *>::iterator it = channel->get_members().begin(); it != channel->get_members().end(); ++it)
             send((*it)->get_fd(), notify.c_str(), notify.length(), 0);
+		LOG("Set mode on channel " + channel->get_name() + notify_modes);
 	}
 
 	return (0);
@@ -626,7 +641,7 @@ int Server::LIST(User *user, std::stringstream &command)
 			}
 			reply(user, "", "322", user->get_nick() + " " + channel->get_name() + " " + member_count, channel->get_topic());
 		}
-	} 
+	}
 	else
 	{
 		// if specific channel requested
