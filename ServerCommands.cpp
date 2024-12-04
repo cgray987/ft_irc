@@ -129,13 +129,20 @@ int Server::QUIT(User *user, std::stringstream &command)
 {
 	std::cout << YEL << "Client disconnected\n" << RST;
 
-	//if the user /QUIT the channel is not removed
-	/* for (std::set<Channel *>::iterator it = user->get_channels().begin(); it != user->get_channels().end(); ++it)
+
+	if (!user->get_channels().empty())
 	{
-		user->leave_channel(*it);
-		if ((*it)->get_members().empty())
-			remove_channel((*it)->get_name());
-	} */
+		std::set<Channel *>::iterator it = user->get_channels().begin();
+		while (!user->get_channels().empty())
+		{
+			Channel *channel = *it;
+			std::stringstream ss(channel->get_name());
+			PART(user, ss);
+			if (user->get_channels().empty())
+				break;
+			it = user->get_channels().begin(); //this is silly, but can't do ++it for some reason, causes seg fault
+		}
+	}
 
 	Server::remove_user(user);
 	(void)command;

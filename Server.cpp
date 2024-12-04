@@ -154,7 +154,6 @@ int	Server::client_message(User *user)
 	{
 		std::cout << "client disconnected\n";
 		remove_user(user);
-		close(user->get_fd());
 		return (1);
 	}
 
@@ -258,8 +257,7 @@ User	*Server::get_user_from_nick(std::string nick)
 	for (std::vector<User *>::iterator it = _users.begin(); it != _users.end(); ++it)
 	{
 		if ((*it)->get_nick() == nick)
-		{std::cout << "user found: " << (*it)->get_nick() << "\n";
-			return (*it);}
+			return (*it);
 	}
 	return (NULL);
 }
