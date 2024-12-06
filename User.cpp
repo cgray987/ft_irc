@@ -1,8 +1,21 @@
 #include "User.hpp"
 
 User::User(){}
-User::User(const User &src) : _nick(src._nick), _user(src._user), _host(src._host){*this = src;}
-User &User::operator = (const User &src){return (*this);}
+User::User(const User &src):
+		_nick(src._nick), _user(src._user), _host(src._host),
+		_fd(src._fd), _auth(src._auth), _op(src._op), _registered(src._registered)
+{*this = src;}
+User &User::operator = (const User &src)
+{
+	_nick = src._nick;
+	_user = src._user;
+	_host = src._host;
+	_fd = src._fd;
+	_auth = src._auth;
+	_op = src._op;
+	_registered = src._registered;
+	return (*this);
+}
 
 User::User(std::string nick, std::string user, std::string host):
 		_nick(nick), _user(user), _host(host),

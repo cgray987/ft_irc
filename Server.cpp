@@ -2,8 +2,14 @@
 #include "Log.hpp"
 
 Server::Server(){}
-Server::Server(const Server &src){*this = src;}
-Server	&Server::operator = (const Server &src){return (*this);}
+Server::Server(const Server &src) : _port(src._port), _password(src._password){*this = src;}
+Server	&Server::operator = (const Server &src)
+{
+	_port = src._port;
+	_password = src._password;
+	return (*this);
+}
+
 Server::Server(int port, std::string password) : _port(port), _password(password)
 {
 	init_command_map();
@@ -49,6 +55,7 @@ Server::Server(int port, std::string password) : _port(port), _password(password
 		close(_epoll_socket);
 		throw std::runtime_error("cannot add server socket to epoll!");
 	}
+	std::cout << BLU << "~~~ ft_irc started ~~~\n" << RST;
 }
 
 Server::~Server()
@@ -166,6 +173,8 @@ int	Server::client_message(User *user)
 	std::string line;
 	// LOG("Processing command: " + line + " from user " + user->get_user());
 	int ret = 0;
+	if (_msg.find("\n") == std::string::npos && _msg.find("\r") == std::string::npos)
+		return 0;
 	while(std::getline(ss, line, '\n'))
 	{
 		if(line.empty()) continue;
@@ -177,10 +186,18 @@ int	Server::client_message(User *user)
 		else
 		{
 		// If command fails, keeping unprocessed data
+			if (_msg == "\n" || _msg == "\r" || _msg == " ")
+				return ret;
 			std::string remaining;
 			if (ss.rdbuf()->in_avail() > 0)
 				remaining.assign(std::istreambuf_iterator<char>(ss), std::istreambuf_iterator<char>());
-			_msg = remaining;
+			if (ret == 1 && !_msg.empty()
+				&& _msg[_msg.size() - 1] != '\r'
+				&& _msg[_msg.size() - 1] != '\n')
+				_msg.clear();
+			else
+				_msg = remaining;
+			std::cout << "Remaining buf: " << buf << ":\n";
 		}
 	}
 	return ret;
@@ -204,30 +221,23 @@ int Server::get_command(User *user, std::string msg)
 		// clearing after processing the command
 		// if (ret == 0)
 		// 	_msg.clear();
-		return (this->*(it->second))(user, params);
+		int	ret = 0;
+		ret = (this->*(it->second))(user, params);
+		return ret;
 	}
 	else
 	{
-		reply(user, "", "421", user->get_nick() + " " + word, "Unknown command"); // ERR_UNKNOWNCOMMAND
+		if (!_msg.empty())
+			reply(user, "", "421", user->get_nick() + " " + word, "Unknown command"); // ERR_UNKNOWNCOMMAND
 		// clearing invalids also --can't do this because command might be valid, but not complete (nc ctrl-d from subject)
 		// _msg.clear();
 		return 1;
 	}
 }
 
-void	Server::reply(User *user, std::string prefix, std::string command,
+void	reply(User *user, std::string prefix, std::string command,
 						std::string target, std::string message)
 {
-	// std::string	reply;
-	// if (!prefix.empty())
-	// 	reply += ":" + prefix + " ";
-	// reply += command;
-	// if (!target.empty())
-	// 	reply += " " + target;
-	// if (!message.empty())
-	// 	reply += " :" + message;
-	// reply += "\n"; // correct line ending ?
-
 	std::string	reply;
 	if (!prefix.empty())
 		reply.append(prefix + " ");
@@ -237,7 +247,7 @@ void	Server::reply(User *user, std::string prefix, std::string command,
 	if (!target.empty())
 		reply.append(target + " ");
 	else
-		reply.append(user->get_prefix() + " ");
+		reply.append(user->get_nick() + " ");
 	if (!message.empty())
 		reply.append(":" + message);
 	else
@@ -246,11 +256,11 @@ void	Server::reply(User *user, std::string prefix, std::string command,
 		reply.append("\n");
 
 	int	bytes_sent = send(user->get_fd(), reply.c_str(), reply.length(), 0);
-	if (bytes_sent <= 0) //TODO not sure what bytes sent==0 means, might be valid message
+	if (bytes_sent <= 0)
 		LOG(RED << "Failed to send to FD:" << user->get_fd() << ":\t" << reply << "\n" << RST);
 
 	LOG("Sent reply to FD " << user->get_fd() << ": " << reply);
-}
+};
 
 User	*Server::get_user_from_nick(std::string nick)
 {

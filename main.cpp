@@ -1,11 +1,10 @@
 #include "Server.hpp"
-#include "Log.hpp"
 
 #include "signal.h"
 #include <cerrno>
 
 #ifdef DEBUG
-#warning "DEBUG is on"
+// #warning "DEBUG is on"
 #endif
 
 
@@ -82,7 +81,7 @@ int	main(int ac, char **av)
 					LOG("Server shutting down.");
 					_logfile.close();
 					#endif
-					
+
 					server_on = false;
 				}
 			}

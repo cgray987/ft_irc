@@ -18,6 +18,9 @@
 #include "User.hpp"
 #include "Colors.hpp"
 #include "Channel.hpp"
+#include "Utils.hpp"
+#include "Log.hpp"
+#include "Error.hpp"
 
 # define user_id(nickname, username) (":" + nickname + "!" + username + "@localhost")
 
@@ -74,8 +77,8 @@ class Server
 		int		get_command(User *user, std::string msg);
 		std::string	find_next_cmd(std::stringstream &params, std::stringstream &parsed_params);
 
-		void	reply(User *user, std::string prefix, std::string command,
-						std::string target, std::string message);
+		// void	reply(User *user, std::string prefix, std::string command,
+		// 				std::string target, std::string message);
 
 		void	register_client(User *user);
 		void	send_server_response(User *user, std::string send_buf);
@@ -114,3 +117,6 @@ class Server
 		//error messages
 };
 
+//changed this from a member function
+void	reply(User *user, std::string prefix, std::string command,
+						std::string target, std::string message);

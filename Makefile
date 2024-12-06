@@ -3,14 +3,14 @@ NAME = ircserv
 DEBUG ?= 0
 
 CC = c++
-CXXFLAGS = -std=c++98 -g
+CXXFLAGS = -std=c++98 -g -Wall -Werror -Wextra
 
 ifeq ($(DEBUG),1)
 	CC = g++
     CPPFLAGS += -DDEBUG
 endif
 
-SRC = main.cpp Server.cpp User.cpp ServerCommands.cpp Channel.cpp Log.cpp Utils.cpp
+SRC = main.cpp Server.cpp User.cpp ServerCommands.cpp Channel.cpp Log.cpp Utils.cpp Error.cpp
 OBJ = $(SRC:.cpp=.o)
 
 # Colors:
