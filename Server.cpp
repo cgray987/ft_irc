@@ -152,7 +152,6 @@ int	Server::client_message(User *user)
 	if (bytes == -1)
 	{
 		std::cout << RED << "~Server~ recv() failure [456]\n" << RST;
-		// perror("recv");
 		throw std::runtime_error("Error in recv()");
 		return (1);
 	}
@@ -165,20 +164,17 @@ int	Server::client_message(User *user)
 	}
 
 	LOG("Received raw message from FD: " << user->get_fd() << ": " << std::string(buf, bytes));
-	// std::cout << "\tbuf: " << buf;
 	_msg.append(buf);
 
 	// processing each commang in _msg
 	std::stringstream ss(_msg);
 	std::string line;
-	// LOG("Processing command: " + line + " from user " + user->get_user());
 	int ret = 0;
 	if (_msg.find("\n") == std::string::npos && _msg.find("\r") == std::string::npos)
 		return 0;
 	while(std::getline(ss, line, '\n'))
 	{
 		if(line.empty()) continue;
-		// std::cout << "\tProcessing command: " << line << std::endl;
 		ret = get_command(user, line);
 		// Clear _msg only after successfully processing a command
 		if (ret == 0 || ret == -1)
@@ -197,7 +193,6 @@ int	Server::client_message(User *user)
 				_msg.clear();
 			else
 				_msg = remaining;
-			std::cout << "Remaining buf: " << buf << ":\n";
 		}
 	}
 	return ret;
